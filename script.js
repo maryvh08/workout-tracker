@@ -1,5 +1,4 @@
 const form = document.getElementById("workout-form");
-
 const workoutList = document.getElementById("workout-list");
 
 async function loadWorkouts() {
@@ -17,7 +16,7 @@ async function loadWorkouts() {
 
   data.forEach(workout => {
     const li = document.createElement("li");
-  
+
     li.innerHTML = `
       <strong>${workout.exercise}</strong><br>
       ${workout.reps} reps · ${workout.weight} kg<br>
@@ -25,16 +24,16 @@ async function loadWorkouts() {
       <br>
       <button class="delete-btn">Eliminar</button>
     `;
-  
+
     li.querySelector(".delete-btn").addEventListener("click", async () => {
       const confirmDelete = confirm("¿Eliminar este entrenamiento?");
       if (!confirmDelete) return;
-  
+
       const { error } = await supabaseClient
         .from("workouts")
         .delete()
         .eq("id", workout.id);
-  
+
       if (error) {
         console.error(error);
         alert("Error al eliminar");
@@ -42,8 +41,8 @@ async function loadWorkouts() {
         loadWorkouts();
       }
     });
-  
-    .appendChild(li);
+
+    workoutList.appendChild(li);
   });
 }
 
@@ -73,4 +72,3 @@ form.addEventListener("submit", async (e) => {
 });
 
 loadWorkouts();
-
