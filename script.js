@@ -5,7 +5,7 @@ form.addEventListener("submit", async (e) => {
 
   const inputs = form.querySelectorAll("input");
 
-  const { error } = await supabase
+  const { error } = await supabaseClient
     .from("workouts")
     .insert([
       {
