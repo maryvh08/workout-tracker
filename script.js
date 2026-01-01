@@ -17,15 +17,35 @@ async function loadWorkouts() {
 
   data.forEach(workout => {
     const li = document.createElement("li");
-    const date = new Date(workout.created_at).toLocaleDateString();
+  
     li.innerHTML = `
       <strong>${workout.exercise}</strong><br>
       ${workout.reps} reps · ${workout.weight} kg<br>
-      <small>${date}</small>
+      <small>${new Date(workout.created_at).toLocaleDateString()}</small>
+      <br>
+      <button class="delete-btn">Eliminar</button>
     `;
+  
+    li.querySelector(".delete-btn").addEventListener("click", async () => {
+      const confirmDelete = confirm("¿Eliminar este entrenamiento?");
+      if (!confirmDelete) return;
+  
+      const { error } = await supabaseClient
+        .from("workouts")
+        .delete()
+        .eq("id", workout.id);
+  
+      if (error) {
+        console.error(error);
+        alert("Error al eliminar");
+      } else {
+        loadWorkouts();
+      }
+    });
+  
     workoutList.appendChild(li);
   });
-}
+
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
