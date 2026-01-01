@@ -43,9 +43,9 @@ async function loadWorkouts() {
       }
     });
   
-    workoutList.appendChild(li);
+    .appendChild(li);
   });
-
+}
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
