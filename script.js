@@ -43,5 +43,9 @@ form.addEventListener("submit", async (e) => {
   } else {
     alert("Entrenamiento guardado 💪");
     form.reset();
+    loadWorkouts();
   }
 });
+
+loadWorkouts();
+
