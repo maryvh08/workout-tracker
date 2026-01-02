@@ -102,9 +102,31 @@
 <!-- ===================== -->
 <!-- SELECTOR MESOCICLO -->
 <!-- ===================== -->
+<!-- Selector de mesociclo activo -->
 <section>
-  <h3>Seleccionar mesociclo</h3>
-  <select id="mesocycle-select"></select>
+  <label>Mesociclo activo</label>
+  <select id="mesocycle-select">
+    <option value="">Sin mesociclo</option>
+  </select>
+
+  <p>
+    <strong id="active-mesocycle-name"></strong><br>
+    <small id="active-mesocycle-dates"></small>
+  </p>
+</section>
+
+<!-- Crear mesociclo -->
+<section>
+  <h3>Crear nuevo mesociclo</h3>
+
+  <select id="template-select">
+    <option value="">Selecciona plantilla</option>
+  </select>
+
+  <input type="date" id="mesocycle-start">
+  <input type="date" id="mesocycle-end">
+
+  <button id="create-mesocycle-btn">Crear mesociclo</button>
 </section>
 
 <!-- ===================== -->
