@@ -95,6 +95,13 @@ async function loadWorkouts() {
   });
 }
 
+const { data: { session } } = await supabaseClient.auth.getSession();
+
+if (!session) {
+  alert("Debes iniciar sesión");
+  return;
+}
+
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -123,7 +130,19 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-loadWorkouts();
+supabaseClient.auth.onAuthStateChange((_event, session) => {
+  if (session) {
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "block";
+    signupBtn.style.display = "none";
+    loadWorkouts();
+  } else {
+    loginBtn.style.display = "block";
+    signupBtn.style.display = "block";
+    logoutBtn.style.display = "none";
+    workoutList.innerHTML = "";
+  }
+});
 
 console.log("SCRIPT CARGADO COMPLETO");
 
