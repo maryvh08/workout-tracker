@@ -104,7 +104,8 @@ async function loadWorkouts() {
       const { error } = await supabaseClient
         .from("workouts")
         .delete()
-        .eq("id", workout.id);
+        .eq("id", workout.id)
+        .eq("user_id", user.id);
 
       if (error) {
         alert("Error al eliminar");
