@@ -370,4 +370,35 @@ document.addEventListener("DOMContentLoaded", () => {
       loadVolumeChart();
       loadPRs();
     });
+  async function loadActiveMesocycle() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return null;
+  
+    const { data, error } = await supabaseClient
+      .from("mesocycles")
+      .select(`
+        id,
+        start_date,
+        end_date,
+        mesocycle_templates ( name, emphasis )
+      `)
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .single();
+  
+    if (error) {
+      activeMesocycle = null;
+      return null;
+    }
+  
+    activeMesocycle = data;
+  
+    document.getElementById("active-mesocycle-name").textContent =
+      data.mesocycle_templates.name;
+  
+    document.getElementById("active-mesocycle-dates").textContent =
+      `${data.start_date} → ${data.end_date}`;
+  
+    return data;
+  }
 });
