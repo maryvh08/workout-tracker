@@ -1,123 +1,145 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Workout Tracker</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>🏋️ Planeación de Mesociclos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Styles -->
-  <link rel="stylesheet" href="styles.css">
+  <!-- SUPABASE -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+  <script>
+    const SUPABASE_URL = "https://daypzhinhmxbewfwfqcd.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRheXB6aGluaG14YmV3ZndmcWNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyODg0OTMsImV4cCI6MjA4Mjg2NDQ5M30.e20dCMDcl9_k7DEv3Lk-ieGGkHCSbqCL6N5hyjsi-Lk";
+
+    const supabaseClient = supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+  </script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f7fb;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    section {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 8px;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    #user-info {
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
 </head>
+
 <body>
 
-<header>
-  <h1>Workout Tracker</h1>
-</header>
+<h1>🏋️ Planeación de Mesociclos</h1>
 
-<main>
+<!-- ===================== -->
+<!-- AUTH -->
+<!-- ===================== -->
+<section id="auth-section">
+  <div id="auth-inputs">
+    <input id="email" type="email" placeholder="Email" />
+    <input id="password" type="password" placeholder="Contraseña" />
+    <button id="login-btn">Entrar</button>
+    <button id="signup-btn">Registrar</button>
+  </div>
 
-  <!-- AUTH -->
-  <section class="auth-section">
-    <div id="auth-inputs">
-      <input type="email" id="email" placeholder="Email">
-      <input type="password" id="password" placeholder="Contraseña">
-      <button id="signup-btn">Registrarse</button>
-      <button id="login-btn">Entrar</button>
-    </div>
-
+  <div id="user-info" style="display:none;">
+    Usuario: <span id="user-email"></span><br><br>
     <button id="logout-btn" style="display:none;">Salir</button>
+  </div>
+</section>
 
-    <div id="user-info" style="display:none;">
-      Usuario: <strong id="user-email"></strong>
-    </div>
-  </section>
+<!-- ===================== -->
+<!-- MESOCICLO ACTIVO -->
+<!-- ===================== -->
+<section>
+  <h3>Mesociclo activo</h3>
+  <strong id="active-mesocycle-name">—</strong>
+</section>
 
-  <!-- MESOCICLO -->
-  <section class="mesocycle-section">
-    <p id="mesocycle-info"></p>
+<!-- ===================== -->
+<!-- SELECTOR MESOCICLO -->
+<!-- ===================== -->
+<section>
+  <h3>Seleccionar mesociclo</h3>
+  <select id="mesocycle-select"></select>
+</section>
 
-    <label for="mesocycle-select">Mesociclo activo</label>
-    <select id="mesocycle-select"></select>
-  </section>
+<!-- ===================== -->
+<!-- REGISTRO ENTRENAMIENTO -->
+<!-- ===================== -->
+<section>
+  <h3>Registrar entrenamiento</h3>
 
-  <!-- FORM -->
-  <section class="form-section">
-    <h2>Nuevo entrenamiento</h2>
+  <form id="workout-form">
+    <label>Ejercicio</label>
+    <select id="exercise-select"></select>
 
-    <form id="workout-form">
-      <select id="exercise-select">
-        <option value="">Selecciona ejercicio</option>
-      </select>
+    <label>Repeticiones</label>
+    <input id="reps" type="number" required />
 
-      <input id="reps" type="number" placeholder="Repeticiones" required>
-      <input id="weight" type="number" placeholder="Peso (kg)" required>
+    <label>Peso (kg)</label>
+    <input id="weight" type="number" step="0.5" required />
 
-      <button type="submit">Guardar</button>
-    </form>
-  </section>
+    <button type="submit">Guardar</button>
+  </form>
+</section>
 
-  <!-- STATS -->
-  <section class="stats-section">
-    <h2>Estadísticas</h2>
+<!-- ===================== -->
+<!-- LISTA ENTRENAMIENTOS -->
+<!-- ===================== -->
+<section>
+  <h3>Entrenamientos</h3>
 
-    <div class="stats-grid">
-      <div class="stat">
-        <span id="stat-volume">0</span>
-        <small>Volumen total (kg)</small>
-      </div>
+  <p id="empty-message">No hay entrenamientos registrados</p>
+  <ul id="workout-list"></ul>
+</section>
 
-      <div class="stat">
-        <span id="stat-count">0</span>
-        <small>Entrenamientos</small>
-      </div>
-
-      <div class="stat">
-        <span id="stat-max">0</span>
-        <small>PR (kg)</small>
-      </div>
-
-      <div class="stat">
-        <span id="stat-top">—</span>
-        <small>Ejercicio top</small>
-      </div>
-    </div>
-  </section>
-
-  <!-- CHARTS -->
-  <section class="chart-section">
-    <h2>Progreso</h2>
-
-    <canvas id="progressChart"></canvas>
-    <canvas id="volumeChart"></canvas>
-  </section>
-
-  <!-- HISTORY -->
-  <section class="history-section">
-    <h2>Historial</h2>
-    <p id="empty-message">Aún no hay entrenamientos</p>
-    <ul id="workout-list"></ul>
-  </section>
-
-</main>
-
-<!-- LIBRARIES (ORDEN CRÍTICO) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<!-- SUPABASE INIT -->
-<script>
-  const supabaseUrl = "https://daypzhinhmxbewfwfqcd.supabase.co";
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRheXB6aGluaG14YmV3ZndmcWNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyODg0OTMsImV4cCI6MjA4Mjg2NDQ5M30.e20dCMDcl9_k7DEv3Lk-ieGGkHCSbqCL6N5hyjsi-Lk";
-
-  const supabaseClient = supabase.createClient(
-    supabaseUrl,
-    supabaseKey
-  );
-
-  console.log("Supabase OK");
-</script>
-
-<!-- APP -->
+<!-- ===================== -->
+<!-- SCRIPT -->
+<!-- ===================== -->
 <script src="script.js"></script>
 
 </body>
