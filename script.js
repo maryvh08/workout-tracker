@@ -111,3 +111,15 @@ loadWorkouts();
 
 console.log("SCRIPT CARGADO COMPLETO");
 
+supabaseClient.auth.onAuthStateChange((_event, session) => {
+  if (session) {
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "block";
+    loadWorkouts();
+  } else {
+    loginBtn.style.display = "block";
+    logoutBtn.style.display = "none";
+  }
+});
+
+
