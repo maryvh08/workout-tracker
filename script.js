@@ -55,34 +55,22 @@ document.addEventListener("DOMContentLoaded", () => {
   // =======================
 
   supabaseClient.auth.onAuthStateChange(async (_event, session) => {
-    if (session) {
-      authInputs.style.display = "none";
-      logoutBtn.style.display = "inline-block";
-      userInfo.style.display = "block";
-      userEmail.textContent = session.user.email;
 
-      await loadActiveMesocycle();
-
-      if (!activeMesocycle) {
-        alert("No tienes mesociclo activo");
-        workoutList.innerHTML = "";
-        emptyMessage.style.display = "block";
-        return;
-      }
-
-      await loadExercisesForMesocycle();
-      await loadMesocycles();
-      await loadWorkouts();
-
-    } else {
-      authInputs.style.display = "block";
-      logoutBtn.style.display = "none";
-      userInfo.style.display = "none";
-
-      workoutList.innerHTML = "";
-      emptyMessage.style.display = "block";
-
+    if (!session) {
       activeMesocycle = null;
+      allowedExercises = [];
+      return;
+    }
+  
+    await loadMesocycleTemplates();
+    await loadActiveMesocycle();
+  
+    if (activeMesocycle) {
+      await loadExercisesForMesocycle();
+      loadWorkouts();
+      loadStats();
+      loadVolumeChart();
+      loadPRs();
     }
   });
 
