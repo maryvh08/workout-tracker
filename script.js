@@ -134,7 +134,7 @@ async function loadStats() {
   const { data, error } = await supabaseClient
     .from("workouts")
     .select("exercise, reps, weight")
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
     .eq("mesocycle_id", activeMesocycle.id)
 
   if (error) {
