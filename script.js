@@ -57,29 +57,42 @@ document.addEventListener("DOMContentLoaded", () => {
   // SESSION STATE
   // =======================
 
-  supabaseClient.auth.onAuthStateChange((event, session) => {
+  supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+
     if (!session) {
-      resetUI();
+      activeMesocycle = null;
+  
+      mesocycleSelect.innerHTML =
+        `<option value="">Inicia sesión</option>`;
+  
+      exerciseSelect.innerHTML =
+        `<option value="">—</option>`;
+  
       return;
     }
-
-    onLogin(session);
+  
+    // 1️⃣ Plantillas (crear mesociclo)
+    await loadMesocycleTemplates();
+  
+    // 2️⃣ Lista de mesociclos (selector)
+    await loadMesocycles();
+  
+    // 3️⃣ Mesociclo activo
+    const m = await loadActiveMesocycle();
+  
+    if (!m) {
+      exerciseSelect.innerHTML =
+        `<option value="">Crea un mesociclo</option>`;
+      return;
+    }
+  
+    // 4️⃣ Ejercicios del mesociclo
+    await loadExercisesForMesocycle();
+  
+    // 5️⃣ Entrenamientos
+    loadWorkouts();
   });
 
-  async function onLogin(session) {
-    authInputs.style.display = "none";
-    logoutBtn.style.display = "inline-block";
-    userInfo.style.display = "block";
-    userEmail.textContent = session.user.email;
-
-    await loadMesocycles();
-    await loadActiveMesocycle();
-
-    if (activeMesocycle) {
-      await loadExercisesForMesocycle();
-      await loadWorkouts();
-    }
-  }
 
   function resetUI() {
     authInputs.style.display = "block";
