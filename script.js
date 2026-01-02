@@ -265,7 +265,6 @@ document.addEventListener("DOMContentLoaded", () => {
     .getElementById("create-mesocycle-btn")
     .addEventListener("click", async () => {
   
-      const templateId = document.getElementById("template-select").value;
       const startDate = document.getElementById("mesocycle-start").value;
       const endDate = document.getElementById("mesocycle-end").value;
   
