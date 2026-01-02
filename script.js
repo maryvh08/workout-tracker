@@ -110,6 +110,10 @@ async function loadWorkouts() {
       } else {
         loadWorkouts();
         loadStats();
+        loadVolumeChart();
+        loadExerciseSelector();
+        loadPRs();
+
       }
     });
 
@@ -122,9 +126,13 @@ async function loadWorkouts() {
 // =======================
 
 async function loadStats() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+
   const { data, error } = await supabaseClient
     .from("workouts")
-    .select("exercise, reps, weight");
+    .select("exercise, reps, weight")
+    .eq("user_id", user.id);
 
   if (error) {
     console.error(error);
@@ -222,7 +230,9 @@ supabaseClient.auth.onAuthStateChange((_event, session) => {
   
     loadWorkouts();
     loadStats();
-    loadVolumeChart(); // 👈 ESTA LÍNEA
+    loadVolumeChart();
+    loadExerciseSelector();
+    loadPRs();
   } else {
     authInputs.style.display = "block";
     logoutBtn.style.display = "none";
@@ -391,6 +401,12 @@ async function loadPRs() {
     list.innerHTML += `<li>🏆 ${exercise}: ${weight} kg</li>`;
   });
 }
+
+document
+  .getElementById("exercise-select")
+  .addEventListener("change", (e) => {
+    loadProgressChart(e.target.value);
+  });
 
 
 console.log("SCRIPT CARGADO COMPLETO");
