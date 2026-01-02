@@ -389,4 +389,5 @@ document.addEventListener("DOMContentLoaded", () => {
   
     return data;
   }
+  console.log("Supabase:", supabaseClient);
 });
