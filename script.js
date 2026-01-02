@@ -645,6 +645,22 @@ document.addEventListener("DOMContentLoaded", () => {
       loadPRs();
     });
   }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const signupBtn = document.getElementById("signup-btn");
+    const loginBtn = document.getElementById("login-btn");
+  
+    console.log("Botones:", signupBtn, loginBtn);
+  
+    signupBtn.addEventListener("click", () => {
+      alert("Signup funciona");
+    });
+  
+    loginBtn.addEventListener("click", () => {
+      alert("Login funciona");
+    });
+  });
+
   
   console.log(signupBtn, loginBtn);
   console.log("SCRIPT CARGADO COMPLETO");
