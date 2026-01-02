@@ -122,18 +122,25 @@ document.addEventListener("DOMContentLoaded", () => {
   
     const { data, error } = await supabaseClient
       .from("mesocycles")
-      .select(`
-        id,
-        is_active,
-        mesocycle_templates ( name )
-      `)
+      .select("id, start_date, end_date, is_active, mesocycle_templates(name)")
       .eq("user_id", user.id)
-      .order("start_date", { ascending: false });
+      .order("created_at", { ascending: false });
   
     if (error) {
-      console.error("Error cargando mesociclos:", error);
+      console.error(error);
       return;
     }
+  
+    mesocycleSelect.innerHTML = "";
+  
+    data.forEach(m => {
+      const option = document.createElement("option");
+      option.value = m.id;
+      option.textContent = m.mesocycle_templates.name;
+      if (m.is_active) option.selected = true;
+      mesocycleSelect.appendChild(option);
+    });
+  }
   
     mesocycleSelect.innerHTML = "";
   
