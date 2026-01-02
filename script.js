@@ -367,4 +367,30 @@ async function loadProgressChart(exercise) {
   });
 }
 
+async function loadPRs() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+
+  const { data, error } = await supabaseClient
+    .from("workouts")
+    .select("exercise, weight")
+    .eq("user_id", user.id);
+
+  if (error) return;
+
+  const prs = {};
+
+  data.forEach(w => {
+    prs[w.exercise] = Math.max(prs[w.exercise] || 0, w.weight);
+  });
+
+  const list = document.getElementById("pr-list");
+  list.innerHTML = "";
+
+  Object.entries(prs).forEach(([exercise, weight]) => {
+    list.innerHTML += `<li>🏆 ${exercise}: ${weight} kg</li>`;
+  });
+}
+
+
 console.log("SCRIPT CARGADO COMPLETO");
