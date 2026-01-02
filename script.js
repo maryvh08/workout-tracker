@@ -1,6 +1,30 @@
 const form = document.getElementById("workout-form");
 const workoutList = document.getElementById("workout-list");
 
+const loginBtn = document.getElementById("login-btn");
+const logoutBtn = document.getElementById("logout-btn");
+
+loginBtn.addEventListener("click", async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    alert(error.message);
+  } else {
+    loadWorkouts();
+  }
+});
+
+logoutBtn.addEventListener("click", async () => {
+  await supabaseClient.auth.signOut();
+  workoutList.innerHTML = "";
+});
+
 async function loadWorkouts() {
   const { data, error } = await supabaseClient
     .from("workouts")
