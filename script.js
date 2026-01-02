@@ -95,13 +95,6 @@ async function loadWorkouts() {
   });
 }
 
-const { data: { session } } = await supabaseClient.auth.getSession();
-
-if (!session) {
-  alert("Debes iniciar sesión");
-  return;
-}
-
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -145,16 +138,4 @@ supabaseClient.auth.onAuthStateChange((_event, session) => {
 });
 
 console.log("SCRIPT CARGADO COMPLETO");
-
-supabaseClient.auth.onAuthStateChange((_event, session) => {
-  if (session) {
-    loginBtn.style.display = "none";
-    logoutBtn.style.display = "block";
-    loadWorkouts();
-  } else {
-    loginBtn.style.display = "block";
-    logoutBtn.style.display = "none";
-  }
-});
-
 
