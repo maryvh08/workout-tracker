@@ -128,6 +128,30 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  async function loadMesocycleTemplates() {
+    const { data, error } = await supabaseClient
+      .from("mesocycle_templates")
+      .select("id, name, emphasis")
+      .order("name");
+  
+    if (error) {
+      console.error("Error cargando plantillas:", error);
+      return;
+    }
+  
+    const select = document.getElementById("template-select");
+    if (!select) return;
+  
+    select.innerHTML = `<option value="">Selecciona plantilla</option>`;
+  
+    data.forEach(t => {
+      const option = document.createElement("option");
+      option.value = t.id;
+      option.textContent = `${t.name} (${t.emphasis})`;
+      select.appendChild(option);
+    });
+  }
+
   async function loadActiveMesocycle() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return;
