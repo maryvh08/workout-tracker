@@ -527,4 +527,23 @@ const { data, error } = await supabaseClient
   .eq("mesocycle_id", activeMesocycle.id)
   .order("created_at", { ascending: false });
 
+async function loadPRs() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+
+  const { data, error } = await supabaseClient
+    .from("workouts")
+    .select("exercise_id, weight, exercises(name)")
+    .eq("user_id", user.id);
+
+  const prs = {};
+
+  data.forEach(w => {
+    const ex = w.exercises.name;
+    prs[ex] = Math.max(prs[ex] || 0, w.weight);
+  });
+
+  // mostrar PR histórico
+}
+
 console.log("SCRIPT CARGADO COMPLETO");
