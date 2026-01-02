@@ -99,6 +99,9 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const inputs = form.querySelectorAll("input");
+  const {
+    data: { user }
+  } = await supabaseClient.auth.getUser();
 
   const { error } = await supabaseClient
     .from("workouts")
@@ -106,7 +109,8 @@ form.addEventListener("submit", async (e) => {
       {
         exercise: inputs[0].value,
         reps: Number(inputs[1].value),
-        weight: Number(inputs[2].value)
+        weight: Number(inputs[2].value),
+        user_id: user.id
       }
     ]);
 
@@ -114,10 +118,6 @@ form.addEventListener("submit", async (e) => {
     console.error(error);
     alert("Error al guardar");
   } else {
-    form.querySelector("button").textContent = "Guardado ✔";
-    setTimeout(() => {
-      form.querySelector("button").textContent = "Guardar";
-    }, 1000);
     form.reset();
     loadWorkouts();
   }
