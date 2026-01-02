@@ -250,9 +250,11 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
     // 2️⃣ Cargar datos dependientes del mesociclo
     await loadExercisesForMesocycle();
 
+    loadMesocycles();
     loadWorkouts();
     loadStats();
     loadVolumeChart();
+    loadExerciseSelector();
     loadPRs();
 
   } else {
