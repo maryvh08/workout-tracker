@@ -297,4 +297,74 @@ async function loadVolumeChart() {
   });
 }
 
+async function loadExerciseSelector() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+
+  const { data, error } = await supabaseClient
+    .from("workouts")
+    .select("exercise")
+    .eq("user_id", user.id);
+
+  if (error) return;
+
+  const select = document.getElementById("exercise-select");
+  const exercises = [...new Set(data.map(w => w.exercise))];
+
+  select.innerHTML = `<option value="">Selecciona un ejercicio</option>`;
+  exercises.forEach(ex => {
+    select.innerHTML += `<option value="${ex}">${ex}</option>`;
+  });
+}
+
+let progressChart = null;
+
+async function loadProgressChart(exercise) {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user || !exercise) return;
+
+  const { data, error } = await supabaseClient
+    .from("workouts")
+    .select("reps, weight, created_at")
+    .eq("user_id", user.id)
+    .eq("exercise", exercise)
+    .order("created_at");
+
+  if (error) return;
+
+  const volumeByDate = {};
+
+  data.forEach(w => {
+    const date = new Date(w.created_at).toLocaleDateString();
+    volumeByDate[date] =
+      (volumeByDate[date] || 0) + w.reps * w.weight;
+  });
+
+  const labels = Object.keys(volumeByDate);
+  const values = Object.values(volumeByDate);
+
+  const ctx = document.getElementById("progressChart").getContext("2d");
+
+  if (progressChart) progressChart.destroy();
+
+  progressChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: `Progreso de ${exercise}`,
+        data: values,
+        tension: 0.3,
+        fill: false
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+}
+
 console.log("SCRIPT CARGADO COMPLETO");
