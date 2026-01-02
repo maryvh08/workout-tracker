@@ -79,45 +79,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function loadActiveMesocycle() {
     const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) return;
-
+    if (!user) return null;
+  
     const { data, error } = await supabaseClient
       .from("mesocycles")
-      .select("id, name")
+      .select(`
+        id,
+        start_date,
+        end_date,
+        mesocycle_templates ( name, emphasis )
+      `)
       .eq("user_id", user.id)
       .eq("is_active", true)
       .single();
-
+  
     if (error) {
       activeMesocycle = null;
-      return;
+      return null;
     }
-
+  
     activeMesocycle = data;
-    document.getElementById("active-mesocycle-name").textContent = data.name;
-  }
-
-  async function loadMesocycles() {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) return;
-
-    const { data, error } = await supabaseClient
-      .from("mesocycles")
-      .select("id, name, is_active")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-
-    if (error) return;
-
-    mesocycleSelect.innerHTML = "";
-
-    data.forEach(m => {
-      const option = document.createElement("option");
-      option.value = m.id;
-      option.textContent = m.name;
-      if (m.is_active) option.selected = true;
-      mesocycleSelect.appendChild(option);
-    });
+  
+    document.getElementById("active-mesocycle-name").textContent =
+      data.mesocycle_templates.name;
+  
+    document.getElementById("active-mesocycle-dates").textContent =
+      `${data.start_date} → ${data.end_date}`;
+  
+    return data;
   }
 
   mesocycleSelect.addEventListener("change", async (e) => {
@@ -357,36 +346,6 @@ document.addEventListener("DOMContentLoaded", () => {
       loadVolumeChart();
       loadPRs();
     });
-  async function loadActiveMesocycle() {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) return null;
   
-    const { data, error } = await supabaseClient
-      .from("mesocycles")
-      .select(`
-        id,
-        start_date,
-        end_date,
-        mesocycle_templates ( name, emphasis )
-      `)
-      .eq("user_id", user.id)
-      .eq("is_active", true)
-      .single();
-  
-    if (error) {
-      activeMesocycle = null;
-      return null;
-    }
-  
-    activeMesocycle = data;
-  
-    document.getElementById("active-mesocycle-name").textContent =
-      data.mesocycle_templates.name;
-  
-    document.getElementById("active-mesocycle-dates").textContent =
-      `${data.start_date} → ${data.end_date}`;
-  
-    return data;
-  }
   console.log("Supabase:", supabaseClient);
 });
