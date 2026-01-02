@@ -1,649 +1,651 @@
-// =======================
-// ELEMENTOS
-// =======================
-
-const form = document.getElementById("workout-form");
-const workoutList = document.getElementById("workout-list");
-const signupBtn = document.getElementById("signup-btn");
-const loginBtn = document.getElementById("login-btn");
-const logoutBtn = document.getElementById("logout-btn");
-const emptyMessage = document.getElementById("empty-message");
-
-let editingWorkoutId = null;
-let activeMesocycle = null;
-let allowedExercises = [];
-
-// =======================
-// AUTH
-// =======================
-
-signupBtn.addEventListener("click", async () => {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  const { error } = await supabaseClient.auth.signUp({ email, password });
-
-  if (error) {
-    alert(error.message);
-  } else {
-    alert("Usuario registrado. Revisa tu correo y luego inicia sesión.");
-  }
-});
-
-loginBtn.addEventListener("click", async () => {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  const { error } = await supabaseClient.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  if (error) alert(error.message);
-});
-
-logoutBtn.addEventListener("click", async () => {
-  await supabaseClient.auth.signOut();
-  workoutList.innerHTML = "";
-  emptyMessage.style.display = "block";
-});
-
-// =======================
-// WORKOUTS
-// =======================
-
-async function loadWorkouts() {
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) return;
-
-  const { data, error } = await supabaseClient
-    .from("workouts")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  workoutList.innerHTML = "";
-
-  if (data.length === 0) {
-    emptyMessage.style.display = "block";
-    return;
-  } else {
-    emptyMessage.style.display = "none";
-  }
-
-  data.forEach(workout => {
-    const li = document.createElement("li");
-
-    li.innerHTML = `
-      <strong>${workout.exercise}</strong><br>
-      ${workout.reps} reps · ${workout.weight} kg<br>
-      <small>${new Date(workout.created_at).toLocaleDateString()}</small><br>
-      <button class="edit-btn">Editar</button>
-      <button class="delete-btn">Eliminar</button>
-    `;
-
-    // EDITAR
-    li.querySelector(".edit-btn").addEventListener("click", () => {
-      const inputs = form.querySelectorAll("input");
-      inputs[0].value = workout.exercise;
-      inputs[1].value = workout.reps;
-      inputs[2].value = workout.weight;
-
-      editingWorkoutId = workout.id;
-      form.querySelector("button").textContent = "Actualizar ✏️";
-    });
-
-    // ELIMINAR
-    li.querySelector(".delete-btn").addEventListener("click", async () => {
-      if (!confirm("¿Eliminar este entrenamiento?")) return;
-
-      const { error } = await supabaseClient
-        .from("workouts")
-        .delete()
-        .eq("id", workout.id);
-
-      if (error) {
-        alert("Error al eliminar");
-        console.error(error);
-      } else {
-        loadWorkouts();
-        loadStats();
-        loadVolumeChart();
-        loadExerciseSelector();
-        loadPRs();
-
-      }
-    });
-
-    workoutList.appendChild(li);
-  });
-}
-
-// =======================
-// STATS
-// =======================
-
-async function loadStats() {
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) return;
-
-  const { data, error } = await supabaseClient
-    .from("workouts")
-    .select("exercise, reps, weight")
-    .eq("user_id", user.id)
-    .eq("mesocycle_id", activeMesocycle.id)
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  let totalVolume = 0;
-  let maxWeight = 0;
-  const exerciseCount = {};
-
-  data.forEach(w => {
-    totalVolume += w.reps * w.weight;
-    maxWeight = Math.max(maxWeight, w.weight);
-    exerciseCount[w.exercise] = (exerciseCount[w.exercise] || 0) + 1;
-  });
-
-  const topExercise =
-    Object.entries(exerciseCount).sort((a, b) => b[1] - a[1])[0]?.[0] || "—";
-
-  document.getElementById("stat-volume").textContent = totalVolume;
-  document.getElementById("stat-count").textContent = data.length;
-  document.getElementById("stat-max").textContent = maxWeight;
-  document.getElementById("stat-top").textContent = topExercise;
-}
-
-// =======================
-// INSERT / UPDATE
-// =======================
-
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const inputs = form.querySelectorAll("input");
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) return;
-
-  if (editingWorkoutId) {
-    // UPDATE
-    const { error } = await supabaseClient
-      .from("workouts")
-      .update({
-        exercise: inputs[0].value,
-        reps: Number(inputs[1].value),
-        weight: Number(inputs[2].value),
-      })
-      .eq("id", editingWorkoutId)
-      .eq("user_id", user.id);
-
+document.addEventListener("DOMContentLoaded", () => {  
+  // =======================
+  // ELEMENTOS
+  // =======================
+  
+  const form = document.getElementById("workout-form");
+  const workoutList = document.getElementById("workout-list");
+  const signupBtn = document.getElementById("signup-btn");
+  const loginBtn = document.getElementById("login-btn");
+  const logoutBtn = document.getElementById("logout-btn");
+  const emptyMessage = document.getElementById("empty-message");
+  
+  let editingWorkoutId = null;
+  let activeMesocycle = null;
+  let allowedExercises = [];
+  
+  // =======================
+  // AUTH
+  // =======================
+  
+  signupBtn.addEventListener("click", async () => {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+  
+    const { error } = await supabaseClient.auth.signUp({ email, password });
+  
     if (error) {
-      alert("Error al actualizar");
-      console.error(error);
-      return;
+      alert(error.message);
+    } else {
+      alert("Usuario registrado. Revisa tu correo y luego inicia sesión.");
     }
-
-    editingWorkoutId = null;
-    form.querySelector("button").textContent = "Guardar";
-  } else {
-    // INSERT
-    const { error } = await supabaseClient
-      .from("workouts")
-      .insert([{
-        exercise_id: document.getElementById("exercise").value,
-        mesocycle_id: activeMesocycle.id,
-        reps: Number(inputs[1].value),
-        weight: Number(inputs[2].value),
-        user_id: user.id,
-      }]);
-
-    if (error) {
-      alert("Error al guardar");
-      console.error(error);
-      return;
-    }
-  }
-
-  form.reset();
-  loadWorkouts();
-  loadStats();
-});
-
-// =======================
-// SESSION STATE
-// =======================
-
-supabaseClient.auth.onAuthStateChange(async (_event, session) => {
-  const authInputs = document.getElementById("auth-inputs");
-  const userInfo = document.getElementById("user-info");
-  const userEmail = document.getElementById("user-email");
-
-  if (session) {
-    // UI auth
-    authInputs.style.display = "none";
-    logoutBtn.style.display = "inline-block";
-
-    userInfo.style.display = "block";
-    userEmail.textContent = session.user.email;
-
-    // 1️⃣ Cargar mesociclo activo
-    await loadActiveMesocycle();
-
-    if (!activeMesocycle) {
-      alert("No tienes un mesociclo activo. Crea uno para comenzar.");
-      
-      // Limpieza visual
-      workoutList.innerHTML = "";
-      emptyMessage.style.display = "block";
-
-      // Aquí luego conectamos el modal / vista de creación
-      return;
-    }
-
-    // 2️⃣ Cargar datos dependientes del mesociclo
-    await loadExercisesForMesocycle();
-
-    loadMesocycles();
-    loadWorkouts();
-    loadStats();
-    loadVolumeChart();
-    loadExerciseSelector();
-    loadPRs();
-
-  } else {
-    // UI auth
-    authInputs.style.display = "block";
-    logoutBtn.style.display = "none";
-
-    userInfo.style.display = "none";
+  });
+  
+  loginBtn.addEventListener("click", async () => {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+  
+    const { error } = await supabaseClient.auth.signInWithPassword({
+      email,
+      password,
+    });
+  
+    if (error) alert(error.message);
+  });
+  
+  logoutBtn.addEventListener("click", async () => {
+    await supabaseClient.auth.signOut();
     workoutList.innerHTML = "";
     emptyMessage.style.display = "block";
-
-    // Reset estado global
-    activeMesocycle = null;
-    allowedExercises = [];
-  }
-});
-
-let volumeChart = null;
-
-async function loadVolumeChart() {
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) return;
-
-  const { data, error } = await supabaseClient
-    .from("workouts")
-    .select("exercise, reps, weight")
-    .eq("user_id", user.id);
+  });
   
-  console.log("Datos workouts para gráfica:", data);
-
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  // Agrupar volumen por ejercicio
-  const volumeByExercise = {};
-
-  data.forEach(w => {
-    const volume = w.reps * w.weight;
-    volumeByExercise[w.exercise] =
-      (volumeByExercise[w.exercise] || 0) + volume;
-  });
-
-  const labels = Object.keys(volumeByExercise);
-  const values = Object.values(volumeByExercise);
-
-  const canvas = document.getElementById("volumeChart");
-  if (!canvas) return;
+  // =======================
+  // WORKOUTS
+  // =======================
   
-  const ctx = canvas.getContext("2d");
-
-
-  if (volumeChart) {
-    volumeChart.destroy();
-  }
-
-  volumeChart = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels,
-      datasets: [{
-        label: "Volumen total (kg)",
-        data: values,
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false }
-      },
-      scales: {
-        y: {
-          beginAtZero: true
-        }
-      }
-    }
-  });
-}
-
-async function loadExerciseSelector() {
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) return;
-
-  const { data, error } = await supabaseClient
-    .from("workouts")
-    .select("exercise")
-    .eq("user_id", user.id);
-
-  if (error) return;
-
-  const select = document.getElementById("exercise-select");
-  const exercises = [...new Set(data.map(w => w.exercise))];
-
-  select.innerHTML = `<option value="">Selecciona un ejercicio</option>`;
-  exercises.forEach(ex => {
-    select.innerHTML += `<option value="${ex}">${ex}</option>`;
-  });
-}
-
-let progressChart = null;
-
-async function loadProgressChart(exercise) {
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user || !exercise) return;
-
-  const { data, error } = await supabaseClient
-    .from("workouts")
-    .select("reps, weight, created_at")
-    .eq("user_id", user.id)
-    .eq("exercise", exercise)
-    .order("created_at");
-
-  if (error) return;
-
-  const volumeByDate = {};
-
-  data.forEach(w => {
-    const date = new Date(w.created_at).toLocaleDateString();
-    volumeByDate[date] =
-      (volumeByDate[date] || 0) + w.reps * w.weight;
-  });
-
-  const labels = Object.keys(volumeByDate);
-  const values = Object.values(volumeByDate);
-
-  const ctx = document.getElementById("progressChart").getContext("2d");
-
-  if (progressChart) progressChart.destroy();
-
-  progressChart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels,
-      datasets: [{
-        label: `Progreso de ${exercise}`,
-        data: values,
-        tension: 0.3,
-        fill: false
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: { beginAtZero: true }
-      }
-    }
-  });
-}
-
-async function loadPRs() {
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) return;
-
-  const { data, error } = await supabaseClient
-    .from("workouts")
-    .select("exercise, weight")
-    .eq("user_id", user.id);
-
-  if (error) return;
-
-  const prs = {};
-
-  data.forEach(w => {
-    prs[w.exercise] = Math.max(prs[w.exercise] || 0, w.weight);
-  });
-
-  const list = document.getElementById("pr-list");
-  list.innerHTML = "";
-
-  Object.entries(prs).forEach(([exercise, weight]) => {
-    list.innerHTML += `<li>🏆 ${exercise}: ${weight} kg</li>`;
-  });
-}
-
-document
-  .getElementById("exercise-select")
-  .addEventListener("change", (e) => {
-    loadProgressChart(e.target.value);
-  });
-
-async function loadMesocycles() {
-  const { data, error } = await supabaseClient
-    .from("mesocycles")
-    .select("id, name, is_active")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  const select = document.getElementById("mesocycle-select");
-  select.innerHTML = "";
-
-  data.forEach(m => {
-    const option = document.createElement("option");
-    option.value = m.id;
-    option.textContent = m.name;
-    if (m.is_active) option.selected = true;
-    select.appendChild(option);
-  });
-}
-
-document
-  .getElementById("mesocycle-select")
-  .addEventListener("change", async e => {
-
-    const newId = e.target.value;
-
-    // 1. Desactivar actual
-    await supabaseClient
-      .from("mesocycles")
-      .update({ is_active: false })
-      .eq("is_active", true);
-
-    // 2. Activar nuevo
-    await supabaseClient
-      .from("mesocycles")
-      .update({ is_active: true })
-      .eq("id", newId);
-
-    loadWorkouts(); // refresca UI
-  });
-
-const mesocycleId = document.getElementById("mesocycle-select").value;
-
-await supabaseClient
-  .from("workouts")
-  .insert({
-    user_id: user.id,
-    exercise,
-    reps,
-    weight,
-    mesocycle_id: mesocycleId
-  });
-
-async function loadActiveMesocycle() {
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) return null;
-
-  const { data, error } = await supabaseClient
-    .from("mesocycles")
-    .select("id, name, template_id")
-    .eq("user_id", user.id)
-    .eq("active", true)
-    .single();
-
-  if (error) {
-    console.warn("No hay mesociclo activo");
-    return null;
-  }
-
-  activeMesocycle = data;
-  document.getElementById("active-mesocycle-name").textContent = data.name;
-  return data;
-}
-
-async function loadExercisesForMesocycle() {
-  if (!activeMesocycle) return;
-
-  const { data, error } = await supabaseClient
-    .rpc("get_exercises_for_mesocycle", {
-      mesocycle_id: activeMesocycle.id
-    });
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  allowedExercises = data;
-
-  const exerciseInput = document.getElementById("exercise");
-  exerciseInput.innerHTML = "";
-
-  data.forEach(e => {
-    const option = document.createElement("option");
-    option.value = e.id;
-    option.textContent = e.name;
-    exerciseInput.appendChild(option);
-  });
-}
-
-const { data, error } = await supabaseClient
-  .from("workouts")
-  .select(`
-    id,
-    reps,
-    weight,
-    created_at,
-    exercises(name)
-  `)
-  .eq("mesocycle_id", activeMesocycle.id)
-  .order("created_at", { ascending: false });
-
-async function loadPRs() {
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) return;
-
-  const { data, error } = await supabaseClient
-    .from("workouts")
-    .select("exercise_id, weight, exercises(name)")
-    .eq("user_id", user.id);
-
-  const prs = {};
-
-  data.forEach(w => {
-    const ex = w.exercises.name;
-    prs[ex] = Math.max(prs[ex] || 0, w.weight);
-  });
-
-  // mostrar PR histórico
-}
-
-const { data, error } = await supabaseClient
-  .rpc("get_mesocycle_exercises", {
-    p_mesocycle_id: activeMesocycle.id
-  });
-
-if (error) {
-  console.error("Error RPC:", error);
-} else {
-  console.log("Ejercicios permitidos:", data);
-}
-
-async function loadMesocycles() {
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) return;
-
-  const { data, error } = await supabaseClient
-    .from("mesocycles")
-    .select(`
-      id,
-      start_date,
-      end_date,
-      is_active,
-      mesocycle_templates ( name )
-    `)
-    .eq("user_id", user.id)
-    .order("start_date", { ascending: false });
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  const select = document.getElementById("mesocycle-select");
-  const info = document.getElementById("mesocycle-info");
-
-  select.innerHTML = "";
-
-  data.forEach(m => {
-    const option = document.createElement("option");
-    option.value = m.id;
-    option.textContent = `${m.mesocycle_templates.name} (${m.start_date} → ${m.end_date})`;
-    if (m.is_active) option.selected = true;
-    select.appendChild(option);
-  });
-
-  const active = data.find(m => m.is_active);
-  if (active) {
-    info.textContent = `Enfoque: ${active.mesocycle_templates.name}`;
-  }
-}
-
-const mesocycleSelect = document.getElementById("mesocycle-select");
-
-if (mesocycleSelect) {
-  mesocycleSelect.addEventListener("change", async (e) => {
-    const mesocycleId = e.target.value;
-
-    const { error } = await supabaseClient
-      .rpc("set_active_mesocycle", { p_mesocycle_id: mesocycleId });
-
+  async function loadWorkouts() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+  
+    const { data, error } = await supabaseClient
+      .from("workouts")
+      .select("*")
+      .order("created_at", { ascending: false });
+  
     if (error) {
-      alert("Error al cambiar mesociclo");
       console.error(error);
       return;
     }
-
-    loadMesocycles();
+  
+    workoutList.innerHTML = "";
+  
+    if (data.length === 0) {
+      emptyMessage.style.display = "block";
+      return;
+    } else {
+      emptyMessage.style.display = "none";
+    }
+  
+    data.forEach(workout => {
+      const li = document.createElement("li");
+  
+      li.innerHTML = `
+        <strong>${workout.exercise}</strong><br>
+        ${workout.reps} reps · ${workout.weight} kg<br>
+        <small>${new Date(workout.created_at).toLocaleDateString()}</small><br>
+        <button class="edit-btn">Editar</button>
+        <button class="delete-btn">Eliminar</button>
+      `;
+  
+      // EDITAR
+      li.querySelector(".edit-btn").addEventListener("click", () => {
+        const inputs = form.querySelectorAll("input");
+        inputs[0].value = workout.exercise;
+        inputs[1].value = workout.reps;
+        inputs[2].value = workout.weight;
+  
+        editingWorkoutId = workout.id;
+        form.querySelector("button").textContent = "Actualizar ✏️";
+      });
+  
+      // ELIMINAR
+      li.querySelector(".delete-btn").addEventListener("click", async () => {
+        if (!confirm("¿Eliminar este entrenamiento?")) return;
+  
+        const { error } = await supabaseClient
+          .from("workouts")
+          .delete()
+          .eq("id", workout.id);
+  
+        if (error) {
+          alert("Error al eliminar");
+          console.error(error);
+        } else {
+          loadWorkouts();
+          loadStats();
+          loadVolumeChart();
+          loadExerciseSelector();
+          loadPRs();
+  
+        }
+      });
+  
+      workoutList.appendChild(li);
+    });
+  }
+  
+  // =======================
+  // STATS
+  // =======================
+  
+  async function loadStats() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+  
+    const { data, error } = await supabaseClient
+      .from("workouts")
+      .select("exercise, reps, weight")
+      .eq("user_id", user.id)
+      .eq("mesocycle_id", activeMesocycle.id)
+  
+    if (error) {
+      console.error(error);
+      return;
+    }
+  
+    let totalVolume = 0;
+    let maxWeight = 0;
+    const exerciseCount = {};
+  
+    data.forEach(w => {
+      totalVolume += w.reps * w.weight;
+      maxWeight = Math.max(maxWeight, w.weight);
+      exerciseCount[w.exercise] = (exerciseCount[w.exercise] || 0) + 1;
+    });
+  
+    const topExercise =
+      Object.entries(exerciseCount).sort((a, b) => b[1] - a[1])[0]?.[0] || "—";
+  
+    document.getElementById("stat-volume").textContent = totalVolume;
+    document.getElementById("stat-count").textContent = data.length;
+    document.getElementById("stat-max").textContent = maxWeight;
+    document.getElementById("stat-top").textContent = topExercise;
+  }
+  
+  // =======================
+  // INSERT / UPDATE
+  // =======================
+  
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+  
+    const inputs = form.querySelectorAll("input");
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+  
+    if (editingWorkoutId) {
+      // UPDATE
+      const { error } = await supabaseClient
+        .from("workouts")
+        .update({
+          exercise: inputs[0].value,
+          reps: Number(inputs[1].value),
+          weight: Number(inputs[2].value),
+        })
+        .eq("id", editingWorkoutId)
+        .eq("user_id", user.id);
+  
+      if (error) {
+        alert("Error al actualizar");
+        console.error(error);
+        return;
+      }
+  
+      editingWorkoutId = null;
+      form.querySelector("button").textContent = "Guardar";
+    } else {
+      // INSERT
+      const { error } = await supabaseClient
+        .from("workouts")
+        .insert([{
+          exercise_id: document.getElementById("exercise").value,
+          mesocycle_id: activeMesocycle.id,
+          reps: Number(inputs[1].value),
+          weight: Number(inputs[2].value),
+          user_id: user.id,
+        }]);
+  
+      if (error) {
+        alert("Error al guardar");
+        console.error(error);
+        return;
+      }
+    }
+  
+    form.reset();
     loadWorkouts();
     loadStats();
-    loadVolumeChart();
-    loadPRs();
   });
-}
-
-console.log(signupBtn, loginBtn);
-console.log("SCRIPT CARGADO COMPLETO");
+  
+  // =======================
+  // SESSION STATE
+  // =======================
+  
+  supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+    const authInputs = document.getElementById("auth-inputs");
+    const userInfo = document.getElementById("user-info");
+    const userEmail = document.getElementById("user-email");
+  
+    if (session) {
+      // UI auth
+      authInputs.style.display = "none";
+      logoutBtn.style.display = "inline-block";
+  
+      userInfo.style.display = "block";
+      userEmail.textContent = session.user.email;
+  
+      // 1️⃣ Cargar mesociclo activo
+      await loadActiveMesocycle();
+  
+      if (!activeMesocycle) {
+        alert("No tienes un mesociclo activo. Crea uno para comenzar.");
+        
+        // Limpieza visual
+        workoutList.innerHTML = "";
+        emptyMessage.style.display = "block";
+  
+        // Aquí luego conectamos el modal / vista de creación
+        return;
+      }
+  
+      // 2️⃣ Cargar datos dependientes del mesociclo
+      await loadExercisesForMesocycle();
+  
+      loadMesocycles();
+      loadWorkouts();
+      loadStats();
+      loadVolumeChart();
+      loadExerciseSelector();
+      loadPRs();
+  
+    } else {
+      // UI auth
+      authInputs.style.display = "block";
+      logoutBtn.style.display = "none";
+  
+      userInfo.style.display = "none";
+      workoutList.innerHTML = "";
+      emptyMessage.style.display = "block";
+  
+      // Reset estado global
+      activeMesocycle = null;
+      allowedExercises = [];
+    }
+  });
+  
+  let volumeChart = null;
+  
+  async function loadVolumeChart() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+  
+    const { data, error } = await supabaseClient
+      .from("workouts")
+      .select("exercise, reps, weight")
+      .eq("user_id", user.id);
+    
+    console.log("Datos workouts para gráfica:", data);
+  
+  
+    if (error) {
+      console.error(error);
+      return;
+    }
+  
+    // Agrupar volumen por ejercicio
+    const volumeByExercise = {};
+  
+    data.forEach(w => {
+      const volume = w.reps * w.weight;
+      volumeByExercise[w.exercise] =
+        (volumeByExercise[w.exercise] || 0) + volume;
+    });
+  
+    const labels = Object.keys(volumeByExercise);
+    const values = Object.values(volumeByExercise);
+  
+    const canvas = document.getElementById("volumeChart");
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext("2d");
+  
+  
+    if (volumeChart) {
+      volumeChart.destroy();
+    }
+  
+    volumeChart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{
+          label: "Volumen total (kg)",
+          data: values,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  }
+  
+  async function loadExerciseSelector() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+  
+    const { data, error } = await supabaseClient
+      .from("workouts")
+      .select("exercise")
+      .eq("user_id", user.id);
+  
+    if (error) return;
+  
+    const select = document.getElementById("exercise-select");
+    const exercises = [...new Set(data.map(w => w.exercise))];
+  
+    select.innerHTML = `<option value="">Selecciona un ejercicio</option>`;
+    exercises.forEach(ex => {
+      select.innerHTML += `<option value="${ex}">${ex}</option>`;
+    });
+  }
+  
+  let progressChart = null;
+  
+  async function loadProgressChart(exercise) {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user || !exercise) return;
+  
+    const { data, error } = await supabaseClient
+      .from("workouts")
+      .select("reps, weight, created_at")
+      .eq("user_id", user.id)
+      .eq("exercise", exercise)
+      .order("created_at");
+  
+    if (error) return;
+  
+    const volumeByDate = {};
+  
+    data.forEach(w => {
+      const date = new Date(w.created_at).toLocaleDateString();
+      volumeByDate[date] =
+        (volumeByDate[date] || 0) + w.reps * w.weight;
+    });
+  
+    const labels = Object.keys(volumeByDate);
+    const values = Object.values(volumeByDate);
+  
+    const ctx = document.getElementById("progressChart").getContext("2d");
+  
+    if (progressChart) progressChart.destroy();
+  
+    progressChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: `Progreso de ${exercise}`,
+          data: values,
+          tension: 0.3,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  }
+  
+  async function loadPRs() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+  
+    const { data, error } = await supabaseClient
+      .from("workouts")
+      .select("exercise, weight")
+      .eq("user_id", user.id);
+  
+    if (error) return;
+  
+    const prs = {};
+  
+    data.forEach(w => {
+      prs[w.exercise] = Math.max(prs[w.exercise] || 0, w.weight);
+    });
+  
+    const list = document.getElementById("pr-list");
+    list.innerHTML = "";
+  
+    Object.entries(prs).forEach(([exercise, weight]) => {
+      list.innerHTML += `<li>🏆 ${exercise}: ${weight} kg</li>`;
+    });
+  }
+  
+  document
+    .getElementById("exercise-select")
+    .addEventListener("change", (e) => {
+      loadProgressChart(e.target.value);
+    });
+  
+  async function loadMesocycles() {
+    const { data, error } = await supabaseClient
+      .from("mesocycles")
+      .select("id, name, is_active")
+      .order("created_at", { ascending: false });
+  
+    if (error) {
+      console.error(error);
+      return;
+    }
+  
+    const select = document.getElementById("mesocycle-select");
+    select.innerHTML = "";
+  
+    data.forEach(m => {
+      const option = document.createElement("option");
+      option.value = m.id;
+      option.textContent = m.name;
+      if (m.is_active) option.selected = true;
+      select.appendChild(option);
+    });
+  }
+  
+  document
+    .getElementById("mesocycle-select")
+    .addEventListener("change", async e => {
+  
+      const newId = e.target.value;
+  
+      // 1. Desactivar actual
+      await supabaseClient
+        .from("mesocycles")
+        .update({ is_active: false })
+        .eq("is_active", true);
+  
+      // 2. Activar nuevo
+      await supabaseClient
+        .from("mesocycles")
+        .update({ is_active: true })
+        .eq("id", newId);
+  
+      loadWorkouts(); // refresca UI
+    });
+  
+  const mesocycleId = document.getElementById("mesocycle-select").value;
+  
+  await supabaseClient
+    .from("workouts")
+    .insert({
+      user_id: user.id,
+      exercise,
+      reps,
+      weight,
+      mesocycle_id: mesocycleId
+    });
+  
+  async function loadActiveMesocycle() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return null;
+  
+    const { data, error } = await supabaseClient
+      .from("mesocycles")
+      .select("id, name, template_id")
+      .eq("user_id", user.id)
+      .eq("active", true)
+      .single();
+  
+    if (error) {
+      console.warn("No hay mesociclo activo");
+      return null;
+    }
+  
+    activeMesocycle = data;
+    document.getElementById("active-mesocycle-name").textContent = data.name;
+    return data;
+  }
+  
+  async function loadExercisesForMesocycle() {
+    if (!activeMesocycle) return;
+  
+    const { data, error } = await supabaseClient
+      .rpc("get_exercises_for_mesocycle", {
+        mesocycle_id: activeMesocycle.id
+      });
+  
+    if (error) {
+      console.error(error);
+      return;
+    }
+  
+    allowedExercises = data;
+  
+    const exerciseInput = document.getElementById("exercise");
+    exerciseInput.innerHTML = "";
+  
+    data.forEach(e => {
+      const option = document.createElement("option");
+      option.value = e.id;
+      option.textContent = e.name;
+      exerciseInput.appendChild(option);
+    });
+  }
+  
+  const { data, error } = await supabaseClient
+    .from("workouts")
+    .select(`
+      id,
+      reps,
+      weight,
+      created_at,
+      exercises(name)
+    `)
+    .eq("mesocycle_id", activeMesocycle.id)
+    .order("created_at", { ascending: false });
+  
+  async function loadPRs() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+  
+    const { data, error } = await supabaseClient
+      .from("workouts")
+      .select("exercise_id, weight, exercises(name)")
+      .eq("user_id", user.id);
+  
+    const prs = {};
+  
+    data.forEach(w => {
+      const ex = w.exercises.name;
+      prs[ex] = Math.max(prs[ex] || 0, w.weight);
+    });
+  
+    // mostrar PR histórico
+  }
+  
+  const { data, error } = await supabaseClient
+    .rpc("get_mesocycle_exercises", {
+      p_mesocycle_id: activeMesocycle.id
+    });
+  
+  if (error) {
+    console.error("Error RPC:", error);
+  } else {
+    console.log("Ejercicios permitidos:", data);
+  }
+  
+  async function loadMesocycles() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+  
+    const { data, error } = await supabaseClient
+      .from("mesocycles")
+      .select(`
+        id,
+        start_date,
+        end_date,
+        is_active,
+        mesocycle_templates ( name )
+      `)
+      .eq("user_id", user.id)
+      .order("start_date", { ascending: false });
+  
+    if (error) {
+      console.error(error);
+      return;
+    }
+  
+    const select = document.getElementById("mesocycle-select");
+    const info = document.getElementById("mesocycle-info");
+  
+    select.innerHTML = "";
+  
+    data.forEach(m => {
+      const option = document.createElement("option");
+      option.value = m.id;
+      option.textContent = `${m.mesocycle_templates.name} (${m.start_date} → ${m.end_date})`;
+      if (m.is_active) option.selected = true;
+      select.appendChild(option);
+    });
+  
+    const active = data.find(m => m.is_active);
+    if (active) {
+      info.textContent = `Enfoque: ${active.mesocycle_templates.name}`;
+    }
+  }
+  
+  const mesocycleSelect = document.getElementById("mesocycle-select");
+  
+  if (mesocycleSelect) {
+    mesocycleSelect.addEventListener("change", async (e) => {
+      const mesocycleId = e.target.value;
+  
+      const { error } = await supabaseClient
+        .rpc("set_active_mesocycle", { p_mesocycle_id: mesocycleId });
+  
+      if (error) {
+        alert("Error al cambiar mesociclo");
+        console.error(error);
+        return;
+      }
+  
+      loadMesocycles();
+      loadWorkouts();
+      loadStats();
+      loadVolumeChart();
+      loadPRs();
+    });
+  }
+  
+  console.log(signupBtn, loginBtn);
+  console.log("SCRIPT CARGADO COMPLETO");
+});
