@@ -14,16 +14,19 @@
 
   <main>
     <section class="auth-section">
-      <input type="email" id="email" placeholder="Email">
-      <input type="password" id="password" placeholder="Contraseña">
-      <button id="signup-btn" type="button">Registrarse</button>
-      <button id="login-btn" type="button">Entrar</button>
-      <button id="logout-btn" type="button" style="display:none;">Salir</button>
+      <div id="auth-inputs">
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Contraseña">
+        <button id="signup-btn">Registrarse</button>
+        <button id="login-btn">Entrar</button>
+      </div>
+    
+      <button id="logout-btn" style="display:none;">Salir</button>
+    
+      <div id="user-info" style="display:none;">
+        Usuario: <strong id="user-email"></strong>
+      </div>
     </section>
-
-    <p id="user-info" style="display:none;">
-      Usuario: <strong id="user-email"></strong>
-    </p>
 
     <section class="form-section">
       <h2>Nuevo entrenamiento</h2>
