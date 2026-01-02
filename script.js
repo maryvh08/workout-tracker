@@ -452,4 +452,16 @@ document
     loadWorkouts(); // refresca UI
   });
 
+const mesocycleId = document.getElementById("mesocycle-select").value;
+
+await supabaseClient
+  .from("workouts")
+  .insert({
+    user_id: user.id,
+    exercise,
+    reps,
+    weight,
+    mesocycle_id: mesocycleId
+  });
+
 console.log("SCRIPT CARGADO COMPLETO");
