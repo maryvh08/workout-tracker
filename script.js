@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadMesocycles() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return;
-
+  
     const { data, error } = await supabaseClient
       .from("mesocycles")
       .select(`
@@ -129,16 +129,21 @@ document.addEventListener("DOMContentLoaded", () => {
       `)
       .eq("user_id", user.id)
       .order("start_date", { ascending: false });
-
-    if (error) return;
-
+  
+    if (error) {
+      console.error("Error cargando mesociclos:", error);
+      return;
+    }
+  
     mesocycleSelect.innerHTML = "";
-
+  
     data.forEach(m => {
       const option = document.createElement("option");
       option.value = m.id;
       option.textContent = m.mesocycle_templates.name;
+  
       if (m.is_active) option.selected = true;
+  
       mesocycleSelect.appendChild(option);
     });
   }
