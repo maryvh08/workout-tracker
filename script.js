@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // AUTH
   // =======================
 
-  signupBtn.addEventListener("click", async () => {
+  signupBtn.tener("click", async () => {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
@@ -109,8 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return data;
   }
 
-  mesocycleSelect.addEventListener("change", async (e) => {
-    const newId = e.target.value;
+  const newId = e.target.value;
 
     await supabaseClient
       .from("mesocycles")
