@@ -93,7 +93,6 @@ document.addEventListener("DOMContentLoaded", () => {
     loadWorkouts();
   });
 
-
   function resetUI() {
     authInputs.style.display = "block";
     logoutBtn.style.display = "none";
