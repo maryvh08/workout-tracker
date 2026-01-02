@@ -232,4 +232,61 @@ supabaseClient.auth.onAuthStateChange((_event, session) => {
   }
 });
 
+let volumeChart = null;
+
+async function loadVolumeChart() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+
+  const { data, error } = await supabaseClient
+    .from("workouts")
+    .select("exercise, reps, weight")
+    .eq("user_id", user.id);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  // Agrupar volumen por ejercicio
+  const volumeByExercise = {};
+
+  data.forEach(w => {
+    const volume = w.reps * w.weight;
+    volumeByExercise[w.exercise] =
+      (volumeByExercise[w.exercise] || 0) + volume;
+  });
+
+  const labels = Object.keys(volumeByExercise);
+  const values = Object.values(volumeByExercise);
+
+  const ctx = document.getElementById("volumeChart").getContext("2d");
+
+  if (volumeChart) {
+    volumeChart.destroy();
+  }
+
+  volumeChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Volumen total (kg)",
+        data: values,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
 console.log("SCRIPT CARGADO COMPLETO");
