@@ -65,6 +65,37 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  logoutBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+  
+    const { error } = await supabaseClient.auth.signOut();
+  
+    if (error) {
+      alert(error.message);
+      return;
+    }
+  
+    // 🔥 LIMPIAR ESTADO GLOBAL
+    activeMesocycle = null;
+  
+    // 🔥 LIMPIAR UI
+    workoutList.innerHTML = "";
+    emptyMessage.style.display = "block";
+  
+    mesocycleSelect.innerHTML = "";
+    exerciseSelect.innerHTML = "";
+  
+    document.getElementById("active-mesocycle-name").textContent = "";
+    document.getElementById("active-mesocycle-dates").textContent = "";
+  
+    // 🔥 MOSTRAR LOGIN / OCULTAR APP
+    authInputs.style.display = "block";
+    logoutBtn.style.display = "none";
+    userInfo.style.display = "none";
+  
+    console.log("Sesión cerrada correctamente 🔒");
+  });
+
   // =======================
   // SESSION STATE
   // =======================
