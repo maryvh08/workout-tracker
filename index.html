@@ -43,16 +43,44 @@
   <!-- =======================
        MESOCYCLE
   ======================== -->
-  <section class="mesocycle-section">
+  <section class="mesocycle-active">
     <h2>Mesociclo activo</h2>
+  
+    <p class="mesocycle-name" id="active-mesocycle-name">—</p>
+    <p class="mesocycle-dates" id="active-mesocycle-dates">—</p>
+  </section>
+
 
     <p>
       <strong id="active-mesocycle-name">—</strong>
     </p>
 
+  <section class="mesocycle-selector">
     <label for="mesocycle-select">Cambiar mesociclo</label>
     <select id="mesocycle-select"></select>
   </section>
+
+  <section class="mesocycle-create">
+    <h3>Nuevo mesociclo</h3>
+  
+    <label>Plantilla</label>
+    <select id="template-select"></select>
+  
+    <label>Fecha inicio</label>
+    <input type="date" id="mesocycle-start">
+  
+    <label>Fecha fin</label>
+    <input type="date" id="mesocycle-end">
+  
+    <button id="create-mesocycle-btn">
+      Crear mesociclo
+    </button>
+  </section>
+
+  <p class="warning">
+    Debes tener un mesociclo activo para registrar entrenamientos
+  </p>
+
 
   <!-- =======================
        NEW WORKOUT
