@@ -49,10 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
     userInfo.style.display = "block";
     logoutBtn.style.display = "inline-block";
     userEmail.textContent = session.user.email;
-  });
-});
-
-  // =======================
+// =======================
   // SESSION STATE
   // =======================
 
