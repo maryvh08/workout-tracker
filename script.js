@@ -146,32 +146,37 @@ document.addEventListener("DOMContentLoaded", () => {
   // MESOCYCLE TEMPLATES
   // =======================
   async function loadMesocycleTemplates() {
-    if (!templateSelect) return;
-    templateSelect.innerHTML = "<option value=''>Cargando plantillas...</option>";
-
+    const select = document.getElementById("template-select");
+    if (!select) return;
+  
+    select.innerHTML = `<option value="">Cargando plantillas...</option>`;
+  
     const { data, error } = await supabaseClient
       .from("mesocycle_templates")
       .select("id, name")
       .order("name");
-
+  
     if (error) {
       console.error("Error cargando plantillas:", error);
-      templateSelect.innerHTML = "<option value=''>Error al cargar</option>";
+      select.innerHTML = `<option value="">Error al cargar</option>`;
       return;
     }
-
+  
     if (!data || data.length === 0) {
-      templateSelect.innerHTML = "<option value=''>No hay plantillas</option>";
+      select.innerHTML = `<option value="">No hay plantillas</option>`;
       return;
     }
-
-    templateSelect.innerHTML = "<option value=''>Selecciona plantilla</option>";
+  
+    select.innerHTML = `<option value="">Selecciona plantilla</option>`;
+  
     data.forEach(t => {
       const option = document.createElement("option");
       option.value = t.id;
       option.textContent = t.name;
-      templateSelect.appendChild(option);
+      select.appendChild(option);
     });
+  
+    console.log("✅ Plantillas cargadas:", data);
   }
 
   // =======================
