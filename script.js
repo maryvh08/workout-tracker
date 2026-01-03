@@ -161,6 +161,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!select) return;
   
     select.innerHTML = `<option value="">Cargando plantillas...</option>`;
+
+    console.log("Templates data:", data, "error:", error);
   
     const { data, error } = await supabaseClient
       .from("mesocycle_templates")
