@@ -129,6 +129,11 @@ document.addEventListener("DOMContentLoaded", () => {
     .getElementById("create-mesocycle-btn")
     .addEventListener("click", async () => {
   
+      if (!currentSession) {
+        alert("Sesión no disponible");
+        return;
+      }
+  
       const templateId = document.getElementById("template-select").value;
       const startDate = document.getElementById("mesocycle-start").value;
       const endDate = document.getElementById("mesocycle-end").value;
@@ -138,27 +143,19 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
   
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if (!user) return;
+      const userId = currentSession.user.id; // ✅ SIEMPRE válido
   
-      // 1️⃣ Desactivar mesociclo activo
-      const { error: deactivateError } = await supabaseClient
+      // Desactivar mesociclo activo
+      await supabaseClient
         .from("mesocycles")
         .update({ is_active: false })
-        .eq("user_id", user.id)
-        .eq("is_active", true);
+        .eq("user_id", userId);
   
-      if (deactivateError) {
-        console.error(deactivateError);
-        alert("Error desactivando mesociclo previo");
-        return;
-      }
-  
-      // 2️⃣ Crear nuevo mesociclo
-      const { data: newMesocycle, error } = await supabaseClient
+      // Crear nuevo mesociclo
+      const { data, error } = await supabaseClient
         .from("mesocycles")
         .insert({
-          user_id: user.id,
+          user_id: userId,
           template_id: templateId,
           start_date: startDate,
           end_date: endDate,
@@ -168,17 +165,12 @@ document.addEventListener("DOMContentLoaded", () => {
         .single();
   
       if (error) {
-        console.error("SUPABASE ERROR:", error);
+        console.error("ERROR CREANDO MESOCICLO:", error);
         alert(error.message);
         return;
       }
   
-      // 3️⃣ Actualizar estado local
-      activeMesocycle = newMesocycle;
-  
-      // 4️⃣ Refrescar UI
-      document.getElementById("active-mesocycle-name").textContent =
-        newMesocycle.mesocycle_templates.name;
+      activeMesocycle = data;
   
       await loadMesocycles();
       await loadExercisesForMesocycle();
