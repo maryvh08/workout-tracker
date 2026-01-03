@@ -1,9 +1,11 @@
+script.js
 document.addEventListener("DOMContentLoaded", () => {
   console.log("script.js iniciado ✅");
 
   // =======================
   // ELEMENTOS
   // =======================
+
   const form = document.getElementById("workout-form");
   const workoutList = document.getElementById("workout-list");
   const emptyMessage = document.getElementById("empty-message");
@@ -18,86 +20,96 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const mesocycleSelect = document.getElementById("mesocycle-select");
   const exerciseSelect = document.getElementById("exercise-select");
-  const templateSelect = document.getElementById("template-select");
 
   let activeMesocycle = null;
 
   // =======================
   // AUTH
   // =======================
+
   signupBtn.addEventListener("click", async () => {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
     const { error } = await supabaseClient.auth.signUp({ email, password });
-    if (error) return alert(error.message);
-    alert("Usuario registrado. Revisa tu correo.");
+
+    if (error) alert(error.message);
+    else alert("Usuario registrado. Revisa tu correo.");
   });
 
   loginBtn.addEventListener("click", async () => {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
-    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (error) return alert(error.message);
-  });
+    const { error } =
+      await supabaseClient.auth.signInWithPassword({ email, password });
 
-  console.log("Auth user:", await supabaseClient.auth.getUser());
+    if (error) alert(error.message);
+  });
 
   logoutBtn.addEventListener("click", async () => {
     const { error } = await supabaseClient.auth.signOut();
-    if (error) return alert(error.message);
+    if (error) alert(error.message);
   });
 
   // =======================
   // SESSION STATE
   // =======================
-  supabaseClient.auth.onAuthStateChange(async (event, session) => {
-    console.log("AUTH EVENT:", event);
-  
+
+  supabaseClient.auth.onAuthStateChange(async (_event, session) => {
     if (!session) {
-      console.log("No session → no templates");
+      // 🔒 LOGOUT
+      activeMesocycle = null;
+
+      authInputs.style.display = "block";
+      logoutBtn.style.display = "none";
+      userInfo.style.display = "none";
+
+      mesocycleSelect.innerHTML = "";
+      exerciseSelect.innerHTML = "";
+      workoutList.innerHTML = "";
+      emptyMessage.style.display = "block";
+
       return;
     }
-  
-    console.log("Session ready → loading templates");
-  
+
+    // ✅ LOGIN
+    authInputs.style.display = "none";
+    logoutBtn.style.display = "inline-block";
+    userInfo.style.display = "block";
+    userEmail.textContent = session.user.email;
+
     await loadMesocycleTemplates();
     await loadMesocycles();
-  
-    const active = await loadActiveMesocycle();
-    if (active) {
-      await loadExercisesForMesocycle();
-      loadWorkouts();
-    }
+
+    const m = await loadActiveMesocycle();
+    if (!m) return;
+
+    await loadExercisesForMesocycle();
+    loadWorkouts();
   });
 
   // =======================
   // MESOCYCLES
   // =======================
+
   async function loadMesocycles() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return;
 
-    const { data, error } = await supabaseClient
+    const { data } = await supabaseClient
       .from("mesocycles")
       .select("id, is_active, mesocycle_templates(name)")
       .eq("user_id", user.id);
 
-    if (error) return console.error(error);
-
     mesocycleSelect.innerHTML = "";
-    if (!data || data.length === 0) {
-      mesocycleSelect.innerHTML = "<option value=''>Sin mesociclos</option>";
-      return;
-    }
 
     data.forEach(m => {
-      const option = document.createElement("option");
-      option.value = m.id;
-      option.textContent = m.mesocycle_templates.name;
-      if (m.is_active) option.selected = true;
-      mesocycleSelect.appendChild(option);
+      const opt = document.createElement("option");
+      opt.value = m.id;
+      opt.textContent = m.mesocycle_templates.name;
+      if (m.is_active) opt.selected = true;
+      mesocycleSelect.appendChild(opt);
     });
   }
 
@@ -105,17 +117,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return null;
 
-    const { data, error } = await supabaseClient
+    const { data } = await supabaseClient
       .from("mesocycles")
       .select("id, mesocycle_templates(name)")
       .eq("user_id", user.id)
       .eq("is_active", true)
       .single();
 
-    if (error || !data) return null;
+    if (!data) return null;
 
     activeMesocycle = data;
-    document.getElementById("active-mesocycle-name").textContent = data.mesocycle_templates.name;
+    document.getElementById("active-mesocycle-name").textContent =
+      data.mesocycle_templates.name;
 
     return data;
   }
@@ -123,10 +136,16 @@ document.addEventListener("DOMContentLoaded", () => {
   mesocycleSelect.addEventListener("change", async e => {
     const id = e.target.value;
     const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user || !id) return;
 
-    await supabaseClient.from("mesocycles").update({ is_active: false }).eq("user_id", user.id);
-    await supabaseClient.from("mesocycles").update({ is_active: true }).eq("id", id);
+    await supabaseClient
+      .from("mesocycles")
+      .update({ is_active: false })
+      .eq("user_id", user.id);
+
+    await supabaseClient
+      .from("mesocycles")
+      .update({ is_active: true })
+      .eq("id", id);
 
     await loadActiveMesocycle();
     await loadExercisesForMesocycle();
@@ -134,21 +153,14 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // =======================
-  // MESOCYCLE TEMPLATES
+  // MESOCYCLES TEMPLATES
   // =======================
+
   async function loadMesocycleTemplates() {
     const select = document.getElementById("template-select");
     if (!select) return;
   
-    select.innerHTML = `<option>Cargando plantillas...</option>`;
-  
-    const { data: { user } } = await supabaseClient.auth.getUser();
-  
-    if (!user) {
-      console.warn("Intento de cargar plantillas sin sesión");
-      select.innerHTML = `<option>Inicia sesión</option>`;
-      return;
-    }
+    select.innerHTML = `<option value="">Cargando plantillas...</option>`;
   
     const { data, error } = await supabaseClient
       .from("mesocycle_templates")
@@ -157,39 +169,36 @@ document.addEventListener("DOMContentLoaded", () => {
   
     if (error) {
       console.error("Error cargando plantillas:", error);
-      select.innerHTML = `<option>Error al cargar</option>`;
+      select.innerHTML = `<option value="">Error al cargar</option>`;
       return;
     }
   
     if (!data || data.length === 0) {
-      select.innerHTML = `<option>No hay plantillas</option>`;
+      select.innerHTML = `<option value="">No hay plantillas</option>`;
       return;
     }
   
     select.innerHTML = `<option value="">Selecciona plantilla</option>`;
   
     data.forEach(t => {
-      const opt = document.createElement("option");
-      opt.value = t.id;
-      opt.textContent = `${t.name} — ${t.emphasis}`;
-      select.appendChild(opt);
+      const option = document.createElement("option");
+      option.value = t.id;
+      option.textContent = `${t.name} — ${t.emphasis}`;
+      select.appendChild(option);
     });
-  
-    console.log("Plantillas cargadas:", data.length);
   }
 
   // =======================
   // EXERCISES
   // =======================
+
   async function loadExercisesForMesocycle() {
     if (!activeMesocycle) {
       exerciseSelect.innerHTML =
         `<option value="">Selecciona un mesociclo</option>`;
-      exerciseSelect.disabled = true;
       return;
     }
   
-    exerciseSelect.disabled = true;
     exerciseSelect.innerHTML =
       `<option value="">Cargando ejercicios...</option>`;
   
@@ -199,7 +208,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   
     if (error) {
-      console.error("RPC error:", error);
+      console.error("RPC get_exercises_for_mesocycle:", error);
       exerciseSelect.innerHTML =
         `<option value="">Error al cargar ejercicios</option>`;
       return;
@@ -207,7 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
     if (!data || data.length === 0) {
       exerciseSelect.innerHTML =
-        `<option value="">No hay ejercicios</option>`;
+        `<option value="">No hay ejercicios para este mesociclo</option>`;
       return;
     }
   
@@ -215,130 +224,125 @@ document.addEventListener("DOMContentLoaded", () => {
       `<option value="">Selecciona ejercicio</option>`;
   
     data.forEach(ex => {
-      const opt = document.createElement("option");
-      opt.value = ex.id;
-      opt.textContent = ex.name;
-      exerciseSelect.appendChild(opt);
+      const option = document.createElement("option");
+      option.value = ex.id;
+      option.textContent = ex.name;
+      exerciseSelect.appendChild(option);
     });
-  
-    exerciseSelect.disabled = false;
-    console.log("✅ Ejercicios cargados:", data);
   }
 
   // =======================
   // WORKOUTS
   // =======================
+
   async function loadWorkouts() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user || !activeMesocycle) return;
 
-    const { data, error } = await supabaseClient
+    const { data } = await supabaseClient
       .from("workouts")
       .select("reps, weight, exercises(name)")
       .eq("user_id", user.id)
-      .eq("mesocycle_id", activeMesocycle.id)
-      .order("created_at", { ascending: false });
-
-    if (error) return console.error(error);
+      .eq("mesocycle_id", activeMesocycle.id);
 
     workoutList.innerHTML = "";
-    if (!data || data.length === 0) {
+
+    if (data.length === 0) {
       emptyMessage.style.display = "block";
       return;
     }
 
     emptyMessage.style.display = "none";
+
     data.forEach(w => {
       const li = document.createElement("li");
       li.textContent = `${w.exercises.name} — ${w.reps} x ${w.weight}kg`;
       workoutList.appendChild(li);
     });
   }
+document
+  .getElementById("create-mesocycle-btn")
+  .addEventListener("click", async () => {
 
-  // =======================
-  // CREATE MESOCYCLE
-  // =======================
-  document.getElementById("create-mesocycle-btn").addEventListener("click", async () => {
+    const templateId = document.getElementById("template-select").value;
     const startDate = document.getElementById("mesocycle-start").value;
     const endDate = document.getElementById("mesocycle-end").value;
-    const templateId = templateSelect.value;
 
     if (!templateId || !startDate || !endDate) {
-      return alert("Completa todos los campos");
+      alert("Completa todos los campos");
+      return;
     }
 
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return;
 
-    try {
-      // Desactivar mesociclo activo
-      await supabaseClient.from("mesocycles")
-        .update({ is_active: false })
-        .eq("user_id", user.id)
-        .eq("is_active", true);
+    // Desactivar mesociclo activo
+    await supabaseClient
+      .from("mesocycles")
+      .update({ is_active: false })
+      .eq("user_id", user.id);
 
-      // Insertar nuevo
-      const { data: newMesocycle, error } = await supabaseClient.from("mesocycles")
-        .insert({
-          user_id: user.id,
-          template_id: templateId,
-          start_date: startDate,
-          end_date: endDate,
-          is_active: true
-        })
-        .select("id, mesocycle_templates(name)")
-        .single();
+    // Crear nuevo
+    const { data, error } = await supabaseClient
+      .from("mesocycles")
+      .insert({
+        user_id: user.id,
+        template_id: templateId,
+        start_date: startDate,
+        end_date: endDate,
+        is_active: true
+      })
+      .select("id, mesocycle_templates(name)")
+      .single();
 
-      if (error) throw error;
-
-      activeMesocycle = newMesocycle;
-
-      await loadMesocycles();
-      await loadActiveMesocycle();
-      await loadExercisesForMesocycle();
-      loadWorkouts();
-
-      alert("Mesociclo creado y activado ✅");
-    } catch (err) {
-      console.error("Error creando mesociclo:", err);
-      alert("Error creando mesociclo. Revisa la consola.");
+    if (error) {
+      console.error(error);
+      alert("Error creando mesociclo");
+      return;
     }
+
+    activeMesocycle = data;
+
+    await loadMesocycles();
+    await loadExercisesForMesocycle();
+    loadWorkouts();
+
+    alert("Mesociclo creado y activado ✅");
   });
 
-  // =======================
-  // REGISTER WORKOUT
-  // =======================
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-
+  
     const reps = Number(document.getElementById("reps").value);
     const weight = Number(document.getElementById("weight").value);
     const exerciseId = exerciseSelect.value;
-
+  
     if (!exerciseId || !activeMesocycle) {
-      return alert("Selecciona mesociclo y ejercicio");
+      alert("Selecciona mesociclo y ejercicio");
+      return;
     }
-
+  
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return;
-
-    const { error } = await supabaseClient.from("workouts").insert({
-      user_id: user.id,
-      exercise_id: exerciseId,
-      reps,
-      weight,
-      mesocycle_id: activeMesocycle.id
-    });
-
+  
+    const { error } = await supabaseClient
+      .from("workouts")
+      .insert({
+        user_id: user.id,
+        exercise_id: exerciseId,
+        reps,
+        weight,
+        mesocycle_id: activeMesocycle.id
+      });
+  
     if (error) {
-      console.error("Error guardando workout:", error);
-      return alert("Error al guardar entrenamiento");
+      console.error(error);
+      alert("Error al guardar");
+      return;
     }
-
+  
     form.reset();
     loadWorkouts();
   });
   
-  document.querySelectorAll("#template-select").length
-
 });
