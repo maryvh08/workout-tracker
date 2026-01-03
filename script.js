@@ -345,4 +345,31 @@ document.addEventListener("DOMContentLoaded", () => {
     loadWorkouts();
   });
   console.log("Mesocycle templates:", data);
+
+  console.log("Creando mesociclo con:", templateId, startDate, endDate);
+
+  // 1️⃣ Desactivar mesociclo actual
+  const { data: deactivate, error: err1 } = await supabaseClient
+    .from("mesocycles")
+    .update({ is_active: false })
+    .eq("user_id", user.id)
+    .eq("is_active", true);
+  
+  console.log("Desactivar mesociclo:", deactivate, err1);
+  
+  // 2️⃣ Insertar nuevo mesociclo
+  const { data: newMesocycle, error: err2 } = await supabaseClient
+    .from("mesocycles")
+    .insert({
+      user_id: user.id,
+      template_id: templateId,
+      start_date: startDate,
+      end_date: endDate,
+      is_active: true
+    })
+    .select("id, start_date, end_date, mesocycle_templates(name)")
+    .single();
+  
+  console.log("Nuevo mesociclo:", newMesocycle, err2);
+
 });
