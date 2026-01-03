@@ -122,4 +122,65 @@ document.addEventListener("DOMContentLoaded", () => {
       templateSelect.appendChild(opt);
     });
   }
+  document
+    .getElementById("create-mesocycle-btn")
+    .addEventListener("click", async () => {
+  
+      const templateId = document.getElementById("template-select").value;
+      const startDate = document.getElementById("mesocycle-start").value;
+      const endDate = document.getElementById("mesocycle-end").value;
+  
+      if (!templateId || !startDate || !endDate) {
+        alert("Completa todos los campos");
+        return;
+      }
+  
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (!user) return;
+  
+      // 1️⃣ Desactivar mesociclo activo
+      const { error: deactivateError } = await supabaseClient
+        .from("mesocycles")
+        .update({ is_active: false })
+        .eq("user_id", user.id)
+        .eq("is_active", true);
+  
+      if (deactivateError) {
+        console.error(deactivateError);
+        alert("Error desactivando mesociclo previo");
+        return;
+      }
+  
+      // 2️⃣ Crear nuevo mesociclo
+      const { data: newMesocycle, error } = await supabaseClient
+        .from("mesocycles")
+        .insert({
+          user_id: user.id,
+          template_id: templateId,
+          start_date: startDate,
+          end_date: endDate,
+          is_active: true
+        })
+        .select("id, mesocycle_templates(name)")
+        .single();
+  
+      if (error) {
+        console.error(error);
+        alert("Error creando mesociclo");
+        return;
+      }
+  
+      // 3️⃣ Actualizar estado local
+      activeMesocycle = newMesocycle;
+  
+      // 4️⃣ Refrescar UI
+      document.getElementById("active-mesocycle-name").textContent =
+        newMesocycle.mesocycle_templates.name;
+  
+      await loadMesocycles();
+      await loadExercisesForMesocycle();
+      loadWorkouts();
+  
+      alert("Mesociclo creado y activado ✅");
+    });
 });
