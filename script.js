@@ -29,22 +29,19 @@ document.addEventListener("DOMContentLoaded", () => {
   // =======================
 
   signupBtn.addEventListener("click", async () => {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+  
     const { error } = await supabaseClient.auth.signUp({ email, password });
-
     if (error) alert(error.message);
-    else alert("Usuario registrado. Revisa tu correo.");
   });
+  
 
-  loginBtn.addEventListener("click", async () => {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-
-    const { error } =
-      await supabaseClient.auth.signInWithPassword({ email, password });
-
+  signupBtn.addEventListener("click", async () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+  
+    const { error } = await supabaseClient.auth.signUp({ email, password });
     if (error) alert(error.message);
   });
 
@@ -58,21 +55,21 @@ document.addEventListener("DOMContentLoaded", () => {
   // =======================
 
   supabaseClient.auth.onAuthStateChange(async (_event, session) => {
-    if (!session) {
-      // 🔒 LOGOUT
-      activeMesocycle = null;
-
-      authInputs.style.display = "block";
-      logoutBtn.style.display = "none";
-      userInfo.style.display = "none";
-
-      mesocycleSelect.innerHTML = "";
-      exerciseSelect.innerHTML = "";
-      workoutList.innerHTML = "";
-      emptyMessage.style.display = "block";
-
-      return;
-    }
+    console.log("Auth event:", _event);
+  
+    renderAuthState(session);
+  
+    if (!session) return;
+  
+    await loadMesocycleTemplates();
+    await loadMesocycles();
+  
+    const m = await loadActiveMesocycle();
+    if (!m) return;
+  
+    await loadExercisesForMesocycle();
+    await loadWorkouts();
+  });
 
     // ✅ LOGIN
     authInputs.style.display = "none";
@@ -347,5 +344,25 @@ document
     form.reset();
     loadWorkouts();
   });
+  function renderAuthState(session) {
+    if (!session) {
+      authInputs.style.display = "block";
+      userInfo.style.display = "none";
+      logoutBtn.style.display = "none";
+  
+      mesocycleSelect.innerHTML = "";
+      exerciseSelect.innerHTML = "";
+      workoutList.innerHTML = "";
+      emptyMessage.style.display = "block";
+  
+      activeMesocycle = null;
+      return;
+    }
+  
+    authInputs.style.display = "none";
+    userInfo.style.display = "block";
+    logoutBtn.style.display = "inline-block";
+    userEmail.textContent = session.user.email;
+  }
   
 });
