@@ -42,6 +42,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (error) return alert(error.message);
   });
 
+  console.log("Auth user:", await supabaseClient.auth.getUser());
+
   logoutBtn.addEventListener("click", async () => {
     const { error } = await supabaseClient.auth.signOut();
     if (error) return alert(error.message);
