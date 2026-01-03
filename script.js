@@ -184,7 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
     data.forEach(t => {
       const option = document.createElement("option");
-      option.value = t.id;
+      option.value = t.id;                  // ✅ debe existir
       option.textContent = `${t.name} — ${t.emphasis}`;
       select.appendChild(option);
     });
