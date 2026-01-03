@@ -184,37 +184,46 @@ document.addEventListener("DOMContentLoaded", () => {
   // =======================
   async function loadExercisesForMesocycle() {
     if (!activeMesocycle) {
-      exerciseSelect.innerHTML = "<option value=''>Selecciona un mesociclo</option>";
+      exerciseSelect.innerHTML =
+        `<option value="">Selecciona un mesociclo</option>`;
+      exerciseSelect.disabled = true;
       return;
     }
-
-    exerciseSelect.innerHTML = "<option value=''>Cargando ejercicios...</option>";
-
-    const { data, error } = await supabaseClient.rpc("get_exercises_for_mesocycle", {
-      p_mesocycle_id: activeMesocycle.id
-    });
-
+  
+    exerciseSelect.disabled = true;
+    exerciseSelect.innerHTML =
+      `<option value="">Cargando ejercicios...</option>`;
+  
+    const { data, error } = await supabaseClient.rpc(
+      "get_exercises_for_mesocycle",
+      { p_mesocycle_id: activeMesocycle.id }
+    );
+  
     if (error) {
-      console.error("RPC get_exercises_for_mesocycle:", error);
-      exerciseSelect.innerHTML = "<option value=''>Error al cargar ejercicios</option>";
+      console.error("RPC error:", error);
+      exerciseSelect.innerHTML =
+        `<option value="">Error al cargar ejercicios</option>`;
       return;
     }
-
+  
     if (!data || data.length === 0) {
-      exerciseSelect.innerHTML = "<option value=''>No hay ejercicios</option>";
+      exerciseSelect.innerHTML =
+        `<option value="">No hay ejercicios</option>`;
       return;
     }
-
-    exerciseSelect.innerHTML = "<option value=''>Selecciona ejercicio</option>";
+  
+    exerciseSelect.innerHTML =
+      `<option value="">Selecciona ejercicio</option>`;
+  
     data.forEach(ex => {
-      const option = document.createElement("option");
-      option.value = ex.id;
-      option.textContent = ex.name;
-      exerciseSelect.appendChild(option);
+      const opt = document.createElement("option");
+      opt.value = ex.id;
+      opt.textContent = ex.name;
+      exerciseSelect.appendChild(opt);
     });
-
+  
     exerciseSelect.disabled = false;
-    form.querySelector("button[type='submit']").disabled = false;
+    console.log("✅ Ejercicios cargados:", data);
   }
 
   // =======================
