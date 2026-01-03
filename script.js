@@ -165,8 +165,8 @@ document.addEventListener("DOMContentLoaded", () => {
         .single();
   
       if (error) {
-        console.error(error);
-        alert("Error creando mesociclo");
+        console.error("SUPABASE ERROR:", error);
+        alert(error.message);
         return;
       }
   
