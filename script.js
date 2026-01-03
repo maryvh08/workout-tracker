@@ -103,12 +103,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     mesocycleSelect.innerHTML = "";
 
-    data.forEach(m => {
-      const opt = document.createElement("option");
-      opt.value = m.id;
-      opt.textContent = m.mesocycle_templates.name;
-      if (m.is_active) opt.selected = true;
-      mesocycleSelect.appendChild(opt);
+    data.forEach(t => {
+      const option = document.createElement("option");
+      option.value = t.id;                  // ✅ debe existir
+      option.textContent = `${t.name} — ${t.emphasis}`;
+      select.appendChild(option);
     });
   }
 
