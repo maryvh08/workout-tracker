@@ -89,6 +89,48 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =======================
+  // CARGA MESOCICLOS
+  // =======================
+  async function loadMesocycles() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+  
+    const { data, error } = await supabaseClient
+      .from("mesocycles")
+      .select("id, is_active, template_id")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+  
+    if (error) {
+      console.error("Error cargando mesociclos:", error);
+      return;
+    }
+  
+    mesocycleSelect.innerHTML = "";
+  
+    if (!data || data.length === 0) {
+      mesocycleSelect.innerHTML =
+        `<option value="">No hay mesociclos</option>`;
+      return;
+    }
+  
+    for (const m of data) {
+      const { data: tpl } = await supabaseClient
+        .from("mesocycle_templates")
+        .select("name")
+        .eq("id", m.template_id)
+        .single();
+  
+      const opt = document.createElement("option");
+      opt.value = m.id;
+      opt.textContent = tpl ? tpl.name : "Mesociclo";
+      if (m.is_active) opt.selected = true;
+  
+      mesocycleSelect.appendChild(opt);
+    }
+  }
+
+  // =======================
   // PLANTILLAS
   // =======================
   async function loadMesocycleTemplates() {
