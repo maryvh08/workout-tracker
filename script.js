@@ -52,43 +52,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // =======================
-  // AUTH STATE (UNO SOLO)
-  // =======================
-  supabaseClient.auth.onAuthStateChange((_event, session) => {
-    currentSession = session;
-  
-    if (!session) {
-      renderLoggedOut();
-      return;
-    }
-  
-    renderLoggedIn(session);
-    loadMesocycleTemplates();
-    loadMesocycles().then(loadActiveMesocycle);
-  });
-
-  // =======================
-  // UI STATES
-  // =======================
-  function renderLoggedOut() {
-    authInputs.style.display = "block";
-    userInfo.style.display = "none";
-    logoutBtn.style.display = "none";
-
-    if (templateSelect) {
-      templateSelect.innerHTML =
-        `<option value="">Inicia sesión</option>`;
-    }
-  }
-
-  function renderLoggedIn(session) {
-    authInputs.style.display = "none";
-    userInfo.style.display = "block";
-    logoutBtn.style.display = "inline-block";
-    userEmail.textContent = session.user.email;
-  }
-
-  // =======================
   // CARGA MESOCICLOS
   // =======================
   async function loadMesocycles() {
@@ -167,6 +130,44 @@ document.addEventListener("DOMContentLoaded", () => {
       templateSelect.appendChild(opt);
     });
   }
+
+  // =======================
+  // AUTH STATE (UNO SOLO)
+  // =======================
+  supabaseClient.auth.onAuthStateChange((_event, session) => {
+    currentSession = session;
+  
+    if (!session) {
+      renderLoggedOut();
+      return;
+    }
+  
+    renderLoggedIn(session);
+    loadMesocycleTemplates();
+    loadMesocycles().then(loadActiveMesocycle);
+  });
+
+  // =======================
+  // UI STATES
+  // =======================
+  function renderLoggedOut() {
+    authInputs.style.display = "block";
+    userInfo.style.display = "none";
+    logoutBtn.style.display = "none";
+
+    if (templateSelect) {
+      templateSelect.innerHTML =
+        `<option value="">Inicia sesión</option>`;
+    }
+  }
+
+  function renderLoggedIn(session) {
+    authInputs.style.display = "none";
+    userInfo.style.display = "block";
+    logoutBtn.style.display = "inline-block";
+    userEmail.textContent = session.user.email;
+  }
+
   document
     .getElementById("create-mesocycle-btn")
     .addEventListener("click", async () => {
