@@ -27,6 +27,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const mesocycleSelect = document.getElementById("mesocycle-select");
   const createBtn = document.getElementById("create-mesocycle-btn");
 
+  async function initAuth() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+  
+    if (session) {
+      currentSession = session;
+      renderLoggedIn(session);
+      await loadMesocycleTemplates();
+      await loadMesocycles();
+      await loadActiveMesocycle();
+    } else {
+      renderLoggedOut();
+    }
+  }
   // =======================
   // AUTH ACTIONS
   // =======================
