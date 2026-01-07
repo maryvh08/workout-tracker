@@ -1,12 +1,24 @@
+console.log("🔥 SCRIPT NUEVO CARGADO 🔥");
+
+// =======================
+// SUPABASE CONFIG
+// =======================
+const supabaseUrl = "https://TU_PROYECTO.supabase.co";
+const supabaseKey = "TU_PUBLIC_ANON_KEY";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+// =======================
+// GLOBAL STATE
+// =======================
+let currentSession = null;
+let activeMesocycle = null;
+
+// =======================
+// DOM READY
+// =======================
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("script.js cargado correctamente ✅");
 
-  let currentSession = null;
-  let activeMesocycle = null;
-
-  // =======================
   // ELEMENTOS
-  // =======================
   const emailInput = document.getElementById("email");
   const passwordInput = document.getElementById("password");
 
@@ -21,8 +33,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const templateSelect = document.getElementById("template-select");
   const mesocycleSelect = document.getElementById("mesocycle-select");
 
+  const createBtn = document.getElementById("create-mesocycle-btn");
+
   // =======================
-  // AUTH
+  // AUTH ACTIONS
   // =======================
   signupBtn.onclick = async () => {
     const { error } = await supabaseClient.auth.signUp({
@@ -68,7 +82,6 @@ document.addEventListener("DOMContentLoaded", () => {
     authInputs.style.display = "block";
     userInfo.style.display = "none";
     logoutBtn.style.display = "none";
-
     mesocycleSelect.innerHTML = "";
     templateSelect.innerHTML = "";
     activeMesocycle = null;
@@ -85,8 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // PLANTILLAS
   // =======================
   async function loadMesocycleTemplates() {
-    templateSelect.innerHTML =
-      `<option value="">Cargando plantillas...</option>`;
+    templateSelect.innerHTML = `<option>Cargando...</option>`;
 
     const { data, error } = await supabaseClient
       .from("mesocycle_templates")
@@ -95,13 +107,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (error) {
       console.error(error);
-      templateSelect.innerHTML =
-        `<option value="">Error</option>`;
       return;
     }
 
-    templateSelect.innerHTML =
-      `<option value="">Selecciona plantilla</option>`;
+    templateSelect.innerHTML = `<option value="">Selecciona plantilla</option>`;
 
     data.forEach(t => {
       const opt = document.createElement("option");
@@ -112,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =======================
-  // MESOCYCLES
+  // MESOCICLOS
   // =======================
   async function loadMesocycles() {
     const userId = currentSession.user.id;
@@ -161,45 +170,43 @@ document.addEventListener("DOMContentLoaded", () => {
   // =======================
   // CREAR MESOCICLO
   // =======================
-  document
-    .getElementById("create-mesocycle-btn")
-    .addEventListener("click", async () => {
+  createBtn.addEventListener("click", async () => {
+    const templateId = templateSelect.value;
+    const startDate = document.getElementById("mesocycle-start").value;
+    const endDate = document.getElementById("mesocycle-end").value;
 
-      const templateId = templateSelect.value;
-      const startDate = document.getElementById("mesocycle-start").value;
-      const endDate = document.getElementById("mesocycle-end").value;
+    if (!templateId || !startDate || !endDate) {
+      alert("Completa todos los campos");
+      return;
+    }
 
-      if (!templateId || !startDate || !endDate) {
-        alert("Completa todos los campos");
-        return;
-      }
+    const userId = currentSession.user.id;
 
-      const userId = currentSession.user.id;
+    await supabaseClient
+      .from("mesocycles")
+      .update({ is_active: false })
+      .eq("user_id", userId);
 
-      await supabaseClient
-        .from("mesocycles")
-        .update({ is_active: false })
-        .eq("user_id", userId);
+    const { error } = await supabaseClient
+      .from("mesocycles")
+      .insert({
+        user_id: userId,
+        template_id: templateId,
+        start_date: startDate,
+        end_date: endDate,
+        is_active: true
+      });
 
-      const { error } = await supabaseClient
-        .from("mesocycles")
-        .insert({
-          user_id: userId,
-          template_id: templateId,
-          start_date: startDate,
-          end_date: endDate,
-          is_active: true
-        });
+    if (error) {
+      console.error(error);
+      alert(error.message);
+      return;
+    }
 
-      if (error) {
-        console.error(error);
-        alert(error.message);
-        return;
-      }
+    await loadMesocycles();
+    await loadActiveMesocycle();
 
-      await loadMesocycles();
-      await loadActiveMesocycle();
+    alert("Mesociclo creado y activado ✅");
+  });
 
-      alert("Mesociclo creado y activado ✅");
-    });
 });
