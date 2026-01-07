@@ -1,4 +1,4 @@
-console.log("🔥 SCRIPT NUEVO CARGADO 🔥");
+console.log("🔥 script.js cargado correctamente");
 
 // =======================
 // GLOBAL STATE
@@ -25,7 +25,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const templateSelect = document.getElementById("template-select");
   const mesocycleSelect = document.getElementById("mesocycle-select");
-
   const createBtn = document.getElementById("create-mesocycle-btn");
 
   // =======================
@@ -103,7 +102,8 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    templateSelect.innerHTML = `<option value="">Selecciona plantilla</option>`;
+    templateSelect.innerHTML =
+      `<option value="">Selecciona plantilla</option>`;
 
     data.forEach(t => {
       const opt = document.createElement("option");
