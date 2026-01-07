@@ -1,13 +1,6 @@
 console.log("🔥 SCRIPT NUEVO CARGADO 🔥");
 
 // =======================
-// SUPABASE CONFIG
-// =======================
-const supabaseUrl = "https://daypzhinhmxbewfwfqcd.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRheXB6aGluaG14YmV3ZndmcWNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyODg0OTMsImV4cCI6MjA4Mjg2NDQ5M30.e20dCMDcl9_k7DEv3Lk-ieGGkHCSbqCL6N5hyjsi-Lk";
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-
-// =======================
 // GLOBAL STATE
 // =======================
 let currentSession = null;
