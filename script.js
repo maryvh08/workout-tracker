@@ -84,19 +84,32 @@ document.addEventListener("DOMContentLoaded", async () => {
   // UI STATES
   // =======================
   function renderLoggedOut() {
+    console.log("🔴 Usuario deslogueado");
+  
+    // Estado
+    currentSession = null;
+    activeMesocycle = null;
+  
+    // UI auth
     authInputs.style.display = "block";
     userInfo.style.display = "none";
     logoutBtn.style.display = "none";
-    mesocycleSelect.innerHTML = "";
-    templateSelect.innerHTML = "";
-    activeMesocycle = null;
-  }
-
-  function renderLoggedIn(session) {
-    authInputs.style.display = "none";
-    userInfo.style.display = "block";
-    logoutBtn.style.display = "inline-block";
-    userEmail.textContent = session.user.email;
+  
+    // Limpieza fuerte de selects
+    mesocycleSelect.innerHTML =
+      `<option value="">Inicia sesión</option>`;
+    mesocycleSelect.disabled = true;
+  
+    templateSelect.innerHTML =
+      `<option value="">Inicia sesión</option>`;
+    templateSelect.disabled = true;
+  
+    // Limpia inputs
+    document.getElementById("mesocycle-start").value = "";
+    document.getElementById("mesocycle-end").value = "";
+  
+    // Deshabilita botón crear
+    document.getElementById("create-mesocycle-btn").disabled = true;
   }
 
   // =======================
