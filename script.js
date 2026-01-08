@@ -60,6 +60,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   logoutBtn.onclick = async () => {
+    console.log("Click cerrar sesión");
     await supabaseClient.auth.signOut();
   };
 
@@ -110,6 +111,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   
     // Deshabilita botón crear
     document.getElementById("create-mesocycle-btn").disabled = true;
+  }
+
+  function renderLoggedIn(session) {
+    console.log("🟢 Usuario logueado:", session.user.email);
+  
+    authInputs.style.display = "none";
+    userInfo.style.display = "block";
+    logoutBtn.style.display = "inline-block";
+  
+    userEmail.textContent = session.user.email;
+  
+    mesocycleSelect.disabled = false;
+    templateSelect.disabled = false;
+    document.getElementById("create-mesocycle-btn").disabled = false;
   }
 
   // =======================
