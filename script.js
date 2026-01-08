@@ -9,7 +9,7 @@ let activeMesocycle = null;
 // =======================
 // DOM READY
 // =======================
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
 
   // ELEMENTOS
   const emailInput = document.getElementById("email");
@@ -27,19 +27,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const mesocycleSelect = document.getElementById("mesocycle-select");
   const createBtn = document.getElementById("create-mesocycle-btn");
 
-  async function initAuth() {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-  
-    if (session) {
-      currentSession = session;
-      renderLoggedIn(session);
-      await loadMesocycleTemplates();
-      await loadMesocycles();
-      await loadActiveMesocycle();
-    } else {
-      renderLoggedOut();
-    }
-  }
   // =======================
   // AUTH ACTIONS
   // =======================
@@ -60,21 +47,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   logoutBtn.onclick = async () => {
-    console.log("Click cerrar sesión");
+    console.log("🚪 Cerrando sesión");
     await supabaseClient.auth.signOut();
   };
 
   // =======================
-  // AUTH STATE
+  // AUTH STATE (ÚNICA FUENTE)
   // =======================
   supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+    console.log("🔄 Auth state change:", session ? "LOGIN" : "LOGOUT");
+
     currentSession = session;
-  
+
     if (!session) {
       renderLoggedOut();
       return;
     }
-  
+
     renderLoggedIn(session);
     await loadMesocycleTemplates();
     await loadMesocycles();
@@ -86,45 +75,42 @@ document.addEventListener("DOMContentLoaded", async () => {
   // =======================
   function renderLoggedOut() {
     console.log("🔴 Usuario deslogueado");
-  
-    // Estado
+
     currentSession = null;
     activeMesocycle = null;
-  
-    // UI auth
+
     authInputs.style.display = "block";
     userInfo.style.display = "none";
     logoutBtn.style.display = "none";
-  
-    // Limpieza fuerte de selects
+
+    userEmail.textContent = "";
+
     mesocycleSelect.innerHTML =
       `<option value="">Inicia sesión</option>`;
     mesocycleSelect.disabled = true;
-  
+
     templateSelect.innerHTML =
       `<option value="">Inicia sesión</option>`;
     templateSelect.disabled = true;
-  
-    // Limpia inputs
+
     document.getElementById("mesocycle-start").value = "";
     document.getElementById("mesocycle-end").value = "";
-  
-    // Deshabilita botón crear
-    document.getElementById("create-mesocycle-btn").disabled = true;
+
+    createBtn.disabled = true;
   }
 
   function renderLoggedIn(session) {
     console.log("🟢 Usuario logueado:", session.user.email);
-  
+
     authInputs.style.display = "none";
     userInfo.style.display = "block";
     logoutBtn.style.display = "inline-block";
-  
+
     userEmail.textContent = session.user.email;
-  
+
     mesocycleSelect.disabled = false;
     templateSelect.disabled = false;
-    document.getElementById("create-mesocycle-btn").disabled = false;
+    createBtn.disabled = false;
   }
 
   // =======================
@@ -140,6 +126,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (error) {
       console.error(error);
+      templateSelect.innerHTML = `<option>Error</option>`;
       return;
     }
 
@@ -204,7 +191,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   // =======================
   // CREAR MESOCICLO
   // =======================
-  createBtn.addEventListener("click", async () => {
+  createBtn.onclick = async () => {
+    if (!currentSession) return;
+
     const templateId = templateSelect.value;
     const startDate = document.getElementById("mesocycle-start").value;
     const endDate = document.getElementById("mesocycle-end").value;
@@ -241,7 +230,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadActiveMesocycle();
 
     alert("Mesociclo creado y activado ✅");
-  });
-  await initAuth();
+  };
 
 });
