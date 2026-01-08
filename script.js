@@ -197,62 +197,77 @@ document.addEventListener("DOMContentLoaded", async () => {
   // CREAR MESOCICLO (FIX DEFINITIVO)
   // =======================
   createBtn.addEventListener("click", async () => {
-    if (!currentSession) return;
-
-    const templateId = templateSelect.value;
-    const startDate = document.getElementById("mesocycle-start").value;
-    const endDate = document.getElementById("mesocycle-end").value;
-
-    if (!templateId || !startDate || !endDate) {
-      alert("Completa todos los campos");
-      return;
+    try {
+      if (!currentSession) {
+        alert("No hay sesión activa");
+        return;
+      }
+  
+      const templateId = templateSelect.value;
+      const startDate = document.getElementById("mesocycle-start").value;
+      const endDate = document.getElementById("mesocycle-end").value;
+  
+      if (!templateId) {
+        alert("Selecciona una plantilla");
+        return;
+      }
+  
+      if (!startDate || !endDate) {
+        alert("Selecciona fechas válidas");
+        return;
+      }
+  
+      const userId = currentSession.user.id;
+  
+      // Obtener plantilla
+      const { data: template, error: tplError } = await supabaseClient
+        .from("mesocycle_templates")
+        .select("name")
+        .eq("id", templateId)
+        .single();
+  
+      if (tplError || !template) {
+        console.error("Error plantilla:", tplError);
+        alert("No se pudo cargar la plantilla");
+        return;
+      }
+  
+      const mesocycleName =
+        `${template.name} (${startDate} → ${endDate})`;
+  
+      // Desactivar mesociclos activos
+      await supabaseClient
+        .from("mesocycles")
+        .update({ is_active: false })
+        .eq("user_id", userId);
+  
+      // Crear mesociclo
+      const { error } = await supabaseClient
+        .from("mesocycles")
+        .insert({
+          user_id: userId,
+          template_id: templateId,
+          name: mesocycleName,
+          start_date: startDate,
+          end_date: endDate,
+          is_active: true
+        });
+  
+      if (error) {
+        console.error("Error creando mesociclo:", error);
+        alert(error.message);
+        return;
+      }
+  
+      await loadMesocycles();
+      await loadActiveMesocycle();
+  
+      alert("Mesociclo creado correctamente ✅");
+  
+    } catch (err) {
+      console.error("CRASH capturado:", err);
+      alert("Error crítico al crear el mesociclo");
     }
-
-    const userId = currentSession.user.id;
-
-    // 1️⃣ Obtener nombre de la plantilla
-    const { data: template, error: tplError } = await supabaseClient
-      .from("mesocycle_templates")
-      .select("name")
-      .eq("id", templateId)
-      .single();
-
-    if (tplError || !template) {
-      alert("No se pudo obtener la plantilla");
-      return;
-    }
-
-    const mesocycleName =
-      `${template.name} (${startDate} → ${endDate})`;
-
-    // 2️⃣ Desactivar mesociclo activo
-    await supabaseClient
-      .from("mesocycles")
-      .update({ is_active: false })
-      .eq("user_id", userId);
-
-    // 3️⃣ Crear mesociclo
-    const { error } = await supabaseClient
-      .from("mesocycles")
-      .insert({
-        user_id: userId,
-        template_id: templateId,
-        name: mesocycleName,
-        start_date: startDate,
-        end_date: endDate,
-        is_active: true
-      });
-
-    if (error) {
-      console.error("Error creando mesociclo:", error);
-      alert(error.message);
-      return;
-    }
-
-    await loadMesocycles();
-    await loadActiveMesocycle();
-
-    alert("Mesociclo creado y activado ✅");
   });
 
   // =======================
