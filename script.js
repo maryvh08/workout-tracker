@@ -9,9 +9,11 @@ let activeMesocycle = null;
 // =======================
 // DOM READY
 // =======================
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
 
+  // =======================
   // ELEMENTOS
+  // =======================
   const emailInput = document.getElementById("email");
   const passwordInput = document.getElementById("password");
 
@@ -26,6 +28,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const templateSelect = document.getElementById("template-select");
   const mesocycleSelect = document.getElementById("mesocycle-select");
   const createBtn = document.getElementById("create-mesocycle-btn");
+
+  // =======================
+  // INIT AUTH
+  // =======================
+  async function initAuth() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+
+    if (session) {
+      currentSession = session;
+      renderLoggedIn(session);
+      await loadMesocycleTemplates();
+      await loadMesocycles();
+      await loadActiveMesocycle();
+    } else {
+      renderLoggedOut();
+    }
+  }
 
   // =======================
   // AUTH ACTIONS
@@ -47,16 +66,13 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   logoutBtn.onclick = async () => {
-    console.log("🚪 Cerrando sesión");
     await supabaseClient.auth.signOut();
   };
 
   // =======================
-  // AUTH STATE (ÚNICA FUENTE)
+  // AUTH STATE
   // =======================
   supabaseClient.auth.onAuthStateChange(async (_event, session) => {
-    console.log("🔄 Auth state change:", session ? "LOGIN" : "LOGOUT");
-
     currentSession = session;
 
     if (!session) {
@@ -74,8 +90,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // UI STATES
   // =======================
   function renderLoggedOut() {
-    console.log("🔴 Usuario deslogueado");
-
     currentSession = null;
     activeMesocycle = null;
 
@@ -83,25 +97,16 @@ document.addEventListener("DOMContentLoaded", () => {
     userInfo.style.display = "none";
     logoutBtn.style.display = "none";
 
-    userEmail.textContent = "";
-
-    mesocycleSelect.innerHTML =
-      `<option value="">Inicia sesión</option>`;
+    mesocycleSelect.innerHTML = `<option>Inicia sesión</option>`;
     mesocycleSelect.disabled = true;
 
-    templateSelect.innerHTML =
-      `<option value="">Inicia sesión</option>`;
+    templateSelect.innerHTML = `<option>Inicia sesión</option>`;
     templateSelect.disabled = true;
-
-    document.getElementById("mesocycle-start").value = "";
-    document.getElementById("mesocycle-end").value = "";
 
     createBtn.disabled = true;
   }
 
   function renderLoggedIn(session) {
-    console.log("🟢 Usuario logueado:", session.user.email);
-
     authInputs.style.display = "none";
     userInfo.style.display = "block";
     logoutBtn.style.display = "inline-block";
@@ -117,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // PLANTILLAS
   // =======================
   async function loadMesocycleTemplates() {
-    templateSelect.innerHTML = `<option>Cargando...</option>`;
+    templateSelect.innerHTML = `<option>Cargando plantillas...</option>`;
 
     const { data, error } = await supabaseClient
       .from("mesocycle_templates")
@@ -125,7 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .order("name");
 
     if (error) {
-      console.error(error);
+      console.error("Error cargando plantillas:", error);
       templateSelect.innerHTML = `<option>Error</option>`;
       return;
     }
@@ -149,30 +154,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const { data, error } = await supabaseClient
       .from("mesocycles")
-      .select("id, is_active, template_id")
-      .eq("user_id", userId);
+      .select("id, name, is_active")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
 
     if (error) {
-      console.error(error);
+      console.error("Error cargando mesociclos:", error);
       return;
     }
 
     mesocycleSelect.innerHTML = "";
 
-    for (const m of data) {
-      const { data: tpl } = await supabaseClient
-        .from("mesocycle_templates")
-        .select("name")
-        .eq("id", m.template_id)
-        .single();
+    if (!data || data.length === 0) {
+      mesocycleSelect.innerHTML =
+        `<option>No hay mesociclos</option>`;
+      return;
+    }
 
+    data.forEach(m => {
       const opt = document.createElement("option");
       opt.value = m.id;
-      opt.textContent = tpl?.name ?? "Mesociclo";
+      opt.textContent = m.name;
       if (m.is_active) opt.selected = true;
-
       mesocycleSelect.appendChild(opt);
-    }
+    });
   }
 
   async function loadActiveMesocycle() {
@@ -189,9 +194,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =======================
-  // CREAR MESOCICLO
+  // CREAR MESOCICLO (FIX DEFINITIVO)
   // =======================
-  createBtn.onclick = async () => {
+  createBtn.addEventListener("click", async () => {
     if (!currentSession) return;
 
     const templateId = templateSelect.value;
@@ -205,23 +210,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const userId = currentSession.user.id;
 
+    // 1️⃣ Obtener nombre de la plantilla
+    const { data: template, error: tplError } = await supabaseClient
+      .from("mesocycle_templates")
+      .select("name")
+      .eq("id", templateId)
+      .single();
+
+    if (tplError || !template) {
+      alert("No se pudo obtener la plantilla");
+      return;
+    }
+
+    const mesocycleName =
+      `${template.name} (${startDate} → ${endDate})`;
+
+    // 2️⃣ Desactivar mesociclo activo
     await supabaseClient
       .from("mesocycles")
       .update({ is_active: false })
       .eq("user_id", userId);
 
+    // 3️⃣ Crear mesociclo
     const { error } = await supabaseClient
       .from("mesocycles")
       .insert({
         user_id: userId,
         template_id: templateId,
+        name: mesocycleName,
         start_date: startDate,
         end_date: endDate,
         is_active: true
       });
 
     if (error) {
-      console.error(error);
+      console.error("Error creando mesociclo:", error);
       alert(error.message);
       return;
     }
@@ -230,6 +253,10 @@ document.addEventListener("DOMContentLoaded", () => {
     await loadActiveMesocycle();
 
     alert("Mesociclo creado y activado ✅");
-  };
+  });
 
+  // =======================
+  // START
+  // =======================
+  await initAuth();
 });
