@@ -12,10 +12,14 @@ document.getElementById("login-btn").onclick = async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password
   });
+  
+  if (data?.session) {
+    showApp();
+  }
 
   if (error) {
     message.textContent = error.message;
@@ -42,14 +46,39 @@ document.getElementById("logout-btn").onclick = async () => {
   await supabase.auth.signOut();
 };
 
-supabase.auth.onAuthStateChange((event, session) => {
+async function checkSession() {
+  const {
+    data: { session }
+  } = await supabase.auth.getSession();
+
   if (session) {
-    loginView.style.display = "none";
-    appView.style.display = "block";
+    showApp();
   } else {
-    loginView.style.display = "block";
-    appView.style.display = "block";
-    appView.style.display = "none";
+    showLogin();
+  }
+}
+
+function showApp() {
+  loginView.style.display = "none";
+  appView.style.display = "block";
+}
+
+function showLogin() {
+  loginView.style.display = "block";
+  appView.style.display = "none";
+}
+
+// Escucha cambios de sesión (login / logout)
+supabase.auth.onAuthStateChange((_event, session) => {
+  if (session) {
+    showApp();
+  } else {
+    showLogin();
   }
 });
+
+// Verifica sesión al cargar la app
+checkSession();
+
+
 
