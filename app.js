@@ -350,6 +350,7 @@ async function renderExercisesForDay(editor, mesocycle, day, week, template) {
    SAVE EXERCISES
 ====================== */
 async function saveDayExercises(select, mesocycleId, day, week) {
+  // Tomar los ejercicios seleccionados del select
   const values = [...select.selectedOptions].map(o => ({
     mesocycle_id: mesocycleId,
     exercise_id: o.value,
@@ -357,6 +358,7 @@ async function saveDayExercises(select, mesocycleId, day, week) {
     week_number: week
   }));
 
+  // Primero eliminar los ejercicios anteriores de ese día y semana
   await supabase
     .from("mesocycle_exercises")
     .delete()
@@ -364,7 +366,13 @@ async function saveDayExercises(select, mesocycleId, day, week) {
     .eq("day_number", day)
     .eq("week_number", week);
 
-  if (values.length) await supabase.from("mesocycle_exercises").insert(values);
+  // Insertar los nuevos seleccionados
+  if (values.length > 0) {
+    const { error } = await supabase
+      .from("mesocycle_exercises")
+      .insert(values);
+    if (error) console.error("Error guardando ejercicios:", error);
+  }
 }
 
 /* ======================
