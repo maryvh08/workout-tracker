@@ -1,93 +1,63 @@
 body {
-  font-family: 'Arial', sans-serif;
-  background: #0b0b0d;
-  color: #eaeaea;
+  font-family: Arial, sans-serif;
+  background: #121212;
+  color: #fff;
   padding: 2rem;
 }
 
 section {
   max-width: 600px;
-  margin: 1rem auto;
-  background: #141418;
+  margin: auto;
+  background: #1c1c1c;
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-}
-
-h1, h2, h3, h4 {
-  color: #eaeaea;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
 
 input, select {
   width: 100%;
   margin-bottom: 1rem;
-  padding: 0.6rem;
+  padding: 0.5rem;
   border-radius: 8px;
   border: none;
-  background: #1c1c1f;
-  color: #eaeaea;
+  background: #2c2c2c;
+  color: #fff;
 }
 
 button {
-  width: 100%;
-  padding: 0.7rem;
+  padding: 0.6rem 1rem;
   margin-bottom: 0.5rem;
-  cursor: pointer;
-  border-radius: 8px;
   border: none;
-  background: #e63946;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #e53935;
   color: white;
   font-weight: bold;
   transition: 0.2s;
 }
-
 button:hover {
-  background: #f0655c;
+  background: #d32f2f;
 }
 
-#auth-message {
-  color: #f44336;
-  margin-top: 1rem;
-  font-weight: bold;
-  text-align: center;
-}
-
-.day-btn, .day-mini-btn {
-  width: 50px;
-  margin-right: 0.5rem;
-  background: #1c1c1f;
-  color: #eaeaea;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
+.day-mini-btn {
+  margin: 0.2rem;
+  background: #2c2c2c;
+  color: #fff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
   font-weight: bold;
 }
-
-.day-btn.active, .day-mini-btn.active {
-  background: #e63946;
-  color: white;
+.day-mini-btn.active {
+  background: #e53935;
 }
 
 .mesocycle-card {
   border: 1px solid #333;
+  background: #1f1f1f;
   padding: 1rem;
-  border-radius: 12px;
-  background: #1c1c1f;
   margin-bottom: 1rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-
-.mesocycle-card header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-
-.editor {
-  margin-top: 1rem;
-  border-top: 1px dashed #333;
-  padding-top: 1rem;
+  border-radius: 12px;
 }
 
 .day-exercise-list {
@@ -97,15 +67,21 @@ button:hover {
   margin-top: 0.5rem;
 }
 
-.day-exercise-list li {
-  background: #e63946;
-  padding: 0.3rem 0.7rem;
-  border-radius: 20px;
-  color: white;
+.exercise-chip {
+  background: #e53935;
+  padding: 0.3rem 0.6rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
   font-size: 0.9rem;
 }
 
-.delete-day-btn {
-  background: #f44336;
-  margin-top: 0.5rem;
+.exercise-chip button {
+  background: transparent;
+  color: #fff;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0;
 }
