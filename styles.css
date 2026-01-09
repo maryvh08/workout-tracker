@@ -187,3 +187,52 @@ input {
     width: 100%;
   }
 }
+/* ======================
+   TARJETAS DE HISTORIAL
+====================== */
+.history-card {
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  padding: var(--space-md);
+  margin-bottom: var(--space-sm);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.history-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.history-card h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.history-card p.template-name {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.history-card button.edit-mesocycle-btn {
+  align-self: flex-start;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.history-card button.edit-mesocycle-btn:hover {
+  background-color: #5f6fe0; /* versión más oscura del accent */
+}
+
