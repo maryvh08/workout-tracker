@@ -262,14 +262,16 @@ async function loadExercisesForTemplate(templateId) {
 }
 
 async function renderExerciseSelect(mesocycle) {
+  console.log("Mesocycle:", mesocycle);
+
+  const exercises = await loadExercisesForTemplate(mesocycle.template_id);
+
+  console.log("Exercises recibidos:", exercises);
+
   exerciseSelect.innerHTML = "";
 
-  const exercises = await loadExercisesForTemplate(
-    mesocycle.template_id
-  );
-
-  if (!exercises.length) {
-    console.warn("No hay ejercicios para esta plantilla");
+  if (!exercises || exercises.length === 0) {
+    exerciseSelect.innerHTML = "<option>No hay ejercicios</option>";
     return;
   }
 
