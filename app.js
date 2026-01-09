@@ -331,7 +331,13 @@ async function renderDayExercises(mesocycleId, day) {
     .eq("mesocycle_id", mesocycleId)
     .eq("day_number", day);
 
-  if (error || data.length === 0) {
+  if (error) {
+    console.error(error);
+    list.innerHTML = "<li>Error cargando ejercicios</li>";
+    return;
+  }
+
+  if (data.length === 0) {
     list.innerHTML = "<li>No hay ejercicios asignados</li>";
     return;
   }
@@ -346,13 +352,16 @@ async function renderDayExercises(mesocycleId, day) {
 daySelect.onchange = async () => {
   if (!daySelect.value || !activeMesocycle) return;
 
+  const day = parseInt(daySelect.value);
+
   exerciseConfig.style.display = "block";
 
   const template = await getTemplateById(activeMesocycle.template_id);
   if (!template) return;
 
   await renderExerciseSelector(template);
-  await loadDayExercises(activeMesocycle.id, parseInt(daySelect.value));
+  await loadDayExercises(activeMesocycle.id, day);
+  await renderDayExercises(activeMesocycle.id, day); // 👈 CLAVE
 };
 
 async function loadDayExercises(mesocycleId, day) {
@@ -403,7 +412,10 @@ document.getElementById("save-day-btn").onclick = async () => {
     .from("mesocycle_exercises")
     .insert(selectedExercises);
 
-  if (!error) dayHint.textContent = `Día ${day} guardado correctamente ✅`;
+  if (!error) {
+    dayHint.textContent = `Día ${day} guardado correctamente ✅`;
+    await renderDayExercises(activeMesocycle.id, day);
+  }
 };
 
 /* ======================
