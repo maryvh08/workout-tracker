@@ -4,3 +4,52 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+const loginView = document.getElementById("login-view");
+const appView = document.getElementById("app-view");
+const message = document.getElementById("auth-message");
+
+document.getElementById("login-btn").onclick = async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    message.textContent = error.message;
+  }
+};
+
+document.getElementById("signup-btn").onclick = async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const { error } = await supabase.auth.signUp({
+    email,
+    password
+  });
+
+  if (error) {
+    message.textContent = error.message;
+  } else {
+    message.textContent = "Usuario creado. Ahora inicia sesión.";
+  }
+};
+
+document.getElementById("logout-btn").onclick = async () => {
+  await supabase.auth.signOut();
+};
+
+supabase.auth.onAuthStateChange((event, session) => {
+  if (session) {
+    loginView.style.display = "none";
+    appView.style.display = "block";
+  } else {
+    loginView.style.display = "block";
+    appView.style.display = "block";
+    appView.style.display = "none";
+  }
+});
+
