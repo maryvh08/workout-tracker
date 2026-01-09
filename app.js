@@ -187,6 +187,20 @@ async function createMesocycle() {
 
 }
 
+templateSelect.onchange = async (e) => {
+  const templateId = e.target.value;
+
+  if (!templateId) return;
+
+  const { data: template } = await supabase
+    .from("templates")
+    .select("*")
+    .eq("id", templateId)
+    .single();
+
+  renderExerciseSelector(template);
+};
+
 document
   .getElementById("create-mesocycle-btn")
   .addEventListener("click", createMesocycle);
@@ -317,6 +331,34 @@ async function openMesocycleConfig(mesocycle) {
   exerciseSelect.innerHTML = "";
   exerciseConfig.style.display = "none"; // 👈 correcto
 }
+
+async function renderDayExercises(mesocycleId, day) {
+  const list = document.getElementById("day-exercise-list");
+  list.innerHTML = "";
+
+  const { data, error } = await supabase
+    .from("mesocycle_exercises")
+    .select("exercise_id, exercises(name)")
+    .eq("mesocycle_id", mesocycleId)
+    .eq("day_number", day);
+
+  if (error || data.length === 0) {
+    list.innerHTML = "<li>No hay ejercicios asignados</li>";
+    return;
+  }
+
+  data.forEach(row => {
+    const li = document.createElement("li");
+    li.textContent = row.exercises.name;
+    list.appendChild(li);
+  });
+}
+
+daySelect.onchange = async () => {
+  if (!activeMesocycle || !daySelect.value) return;
+
+  await renderDayExercises(activeMesocycle.id, daySelect.value);
+};
 
 async function loadDayExercises(mesocycleId, day) {
   const { data, error } = await supabase
