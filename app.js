@@ -68,12 +68,13 @@ function showLogin() {
   appView.style.display = "none";
 }
 
-// Escucha cambios de sesión (login / logout)
-supabase.auth.onAuthStateChange((_event, session) => {
+supabase.auth.onAuthStateChange((event, session) => {
   if (session) {
-    showApp();
+    loginView.style.display = "none";
+    appView.style.display = "block";
   } else {
-    showLogin();
+    loginView.style.display = "block";
+    appView.style.display = "none";
   }
 });
 
