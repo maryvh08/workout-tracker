@@ -146,7 +146,6 @@ async function createMesocycle() {
     .select()
     .single();
 
-
   if (error) {
     alert(error.message);
     return;
@@ -163,6 +162,7 @@ async function createMesocycle() {
     .forEach((b) => b.classList.remove("active"));
 
   loadMesocycles();
+  openMesocycleConfig(data);
 }
 
 document
