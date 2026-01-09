@@ -29,3 +29,12 @@ button {
   color: red;
   margin-top: 1rem;
 }
+
+.day-btn {
+  width: 50px;
+  margin-right: 0.5rem;
+}
+.day-btn.active {
+  background: #333;
+  color: white;
+}
