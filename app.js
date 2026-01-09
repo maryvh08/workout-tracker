@@ -108,10 +108,23 @@ async function loadMesocycles() {
 
   data.forEach((m) => {
     const li = document.createElement("li");
-    li.textContent = `${m.name} – ${m.weeks} semanas – ${m.days_per_week} días`;
-    li.onclick = () => openMesocycleConfig(m);
+    li.style.display = "flex";
+    li.style.justifyContent = "space-between";
+    li.style.alignItems = "center";
+  
+    const info = document.createElement("span");
+    info.textContent = `${m.name} – ${m.weeks} semanas – ${m.days_per_week} días`;
+  
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "✏️ Editar";
+    editBtn.onclick = () => openMesocycleConfig(m);
+  
+    li.appendChild(info);
+    li.appendChild(editBtn);
+  
     mesocycleList.appendChild(li);
   });
+
 }
 
 /* ======================
@@ -273,6 +286,14 @@ function loadDays(mesocycle) {
 }
 
 daySelect.onchange = async () => {
+  if (!daySelect.value) {
+    exerciseConfig.style.display = "none";
+    return;
+  }
+
+  exerciseConfig.style.display = "block";
+  await renderExerciseChecklist(activeMesocycle);
+};
   if (!daySelect.value || !activeMesocycle) return;
 
   const day = parseInt(daySelect.value);
