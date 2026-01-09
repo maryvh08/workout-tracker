@@ -2,6 +2,7 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 let activeMesocycle = null;
 const daySelect = document.getElementById("day-select");
 const exerciseConfig = document.getElementById("exercise-config");
+const exerciseSelect = document.getElementById("exercise-select");
 const SUPABASE_URL = "https://vhwfenefevzzksxrslkx.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZod2ZlbmVmZXZ6emtzeHJzbGt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5MTE3ODAsImV4cCI6MjA4MzQ4Nzc4MH0.CG1KzxpxGHifXsgBvH-4E4WvXbj6d-8WsagqaHAtVwo";
@@ -248,26 +249,6 @@ async function loadExercisesForTemplate(templateId) {
     .in("subgroup", template.emphasis.split(","));
 }
 
-async function renderExerciseChecklist(mesocycle) {
-  const { data: exercises } =
-    await loadExercisesForTemplate(mesocycle.template_id);
-
-  exerciseConfig.innerHTML = "";
-
-  exercises.forEach((e) => {
-    const label = document.createElement("label");
-    const cb = document.createElement("input");
-
-    cb.type = "checkbox";
-    cb.value = e.id;
-
-    label.appendChild(cb);
-    label.append(` ${e.name}`);
-
-    exerciseConfig.appendChild(label);
-    exerciseConfig.appendChild(document.createElement("br"));
-  });
-}
 
 function loadDays(mesocycle) {
   if (!mesocycle.days_per_week) {
@@ -286,10 +267,12 @@ function loadDays(mesocycle) {
 }
 
 daySelect.onchange = async () => {
-  if (!daySelect.value) {
-    exerciseConfig.style.display = "none";
-    return;
-  }
+  if (!daySelect.value) return;
+
+  await renderExerciseSelect(activeMesocycle);
+  await loadDayExercises(activeMesocycle.id, parseInt(daySelect.value));
+};
+
 
   exerciseConfig.style.display = "block";
   await renderExerciseChecklist(activeMesocycle);
@@ -336,22 +319,27 @@ async function openMesocycleConfig(mesocycle) {
   await renderExerciseChecklist(mesocycle);
 }
 
-document.getElementById("save-day-btn").onclick = async () => {
-  if (!activeMesocycle) {
-    alert("Selecciona un mesociclo");
-    return;
-  }
+async function loadDayExercises(mesocycleId, day) {
+  const { data } = await supabase
+    .from("mesocycle_exercises")
+    .select("exercise_id")
+    .eq("mesocycle_id", mesocycleId)
+    .eq("day_number", day);
 
-  if (!daySelect.value) {
-    alert("Selecciona un día");
-    return;
-  }
+  const selected = data.map(r => r.exercise_id);
+
+  [...exerciseSelect.options].forEach(opt => {
+    opt.selected = selected.includes(opt.value);
+  });
+}
+
+document.getElementById("save-day-btn").onclick = async () => {
   const day = parseInt(daySelect.value);
 
-  const rows = [...exerciseConfig.querySelectorAll("input:checked")].map(
-    (cb) => ({
+  const selectedExercises = [...exerciseSelect.selectedOptions].map(
+    opt => ({
       mesocycle_id: activeMesocycle.id,
-      exercise_id: cb.value,
+      exercise_id: opt.value,
       day_number: day
     })
   );
@@ -364,7 +352,7 @@ document.getElementById("save-day-btn").onclick = async () => {
 
   const { error } = await supabase
     .from("mesocycle_exercises")
-    .insert(rows);
+    .insert(selectedExercises);
 
   if (!error) alert(`Día ${day} guardado ✅`);
 };
