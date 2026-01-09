@@ -233,43 +233,44 @@ const configView = document.getElementById("config-view");
 const configTitle = document.getElementById("config-title");
 
 async function loadExercisesForTemplate(templateId) {
-  const { data: template, error: templateError } = await supabase
+  const { data: template, error } = await supabase
     .from("templates")
     .select("emphasis")
     .eq("id", templateId)
     .single();
 
-  if (templateError) {
-    console.error("Error cargando plantilla", templateError);
-    return { data: [], error: templateError };
+  if (error) {
+    console.error(error);
+    return [];
   }
 
-  // Caso: todos los ejercicios
+  // Todos los ejercicios
   if (!template.emphasis || template.emphasis === "Todos") {
-    return await supabase
-      .from("exercises")
-      .select("*")
-      .order("name");
+    const { data } = await supabase.from("exercises").select("*");
+    return data || [];
   }
 
   const groups = template.emphasis.split(",").map(e => e.trim());
 
-  return await supabase
+  const { data } = await supabase
     .from("exercises")
     .select("*")
-    .in("subgroup", groups)
-    .order("name");
+    .in("subgroup", groups);
+
+  return data || [];
 }
 
 async function renderExerciseSelect(mesocycle) {
-  console.log("Renderizando ejercicios para plantilla:", mesocycle.template_id);
-
-  const { data: exercises, error } =
-    await loadExercisesForTemplate(mesocycle.template_id);
-
-  console.log("Ejercicios recibidos:", exercises);
-
   exerciseSelect.innerHTML = "";
+
+  const exercises = await loadExercisesForTemplate(
+    mesocycle.template_id
+  );
+
+  if (!exercises.length) {
+    console.warn("No hay ejercicios para esta plantilla");
+    return;
+  }
 
   exercises.forEach(e => {
     const opt = document.createElement("option");
