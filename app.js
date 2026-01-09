@@ -160,12 +160,19 @@ async function openRegistroEditor(id) {
   await renderRegistroEditor(id);
 }
 
+/* ======================
+   REGISTRO TAB MEJORADO
+====================== */
 async function renderRegistroEditor(mesocycleId) {
   registroEditor.innerHTML = "";
   const mesocycle = await supabase.from("mesocycles").select("*").eq("id", mesocycleId).single().then(r => r.data);
   const template = await getTemplateById(mesocycle.template_id);
 
-  // Semana
+  // Contenedor principal
+  const container = document.createElement("div");
+  container.className = "registro-container";
+
+  // Selector de semana
   const weekSelect = document.createElement("select");
   weekSelect.className = "week-select";
   for (let w = 1; w <= mesocycle.weeks; w++) {
@@ -174,10 +181,11 @@ async function renderRegistroEditor(mesocycleId) {
     opt.textContent = `Semana ${w}`;
     weekSelect.appendChild(opt);
   }
-  registroEditor.appendChild(weekSelect);
+  container.appendChild(weekSelect);
 
-  // Días
+  // Botones de días
   const dayDiv = document.createElement("div");
+  dayDiv.className = "day-buttons";
   for (let i = 1; i <= mesocycle.days_per_week; i++) {
     const btn = document.createElement("button");
     btn.className = "day-mini-btn";
@@ -185,56 +193,61 @@ async function renderRegistroEditor(mesocycleId) {
     btn.onclick = async () => {
       dayDiv.querySelectorAll(".day-mini-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
-      await renderExercisesForRegistro(mesocycleId, i, parseInt(weekSelect.value), template);
+      await renderExercisesForRegistro(container, mesocycleId, i, parseInt(weekSelect.value), template);
     };
     dayDiv.appendChild(btn);
   }
-  registroEditor.appendChild(dayDiv);
+  container.appendChild(dayDiv);
 
-  // Cambiar semana
+  // Listener al cambiar semana
   weekSelect.onchange = async () => {
     const activeDay = dayDiv.querySelector(".day-mini-btn.active");
     if (activeDay) {
       const day = parseInt(activeDay.textContent.replace("Día ", ""));
-      await renderExercisesForRegistro(mesocycleId, day, parseInt(weekSelect.value), template);
+      await renderExercisesForRegistro(container, mesocycleId, day, parseInt(weekSelect.value), template);
     }
   };
 
-  // Contenedor ejercicios + botón registrar
+  // Select ejercicios
   const select = document.createElement("select");
   select.multiple = true;
   select.size = 10;
   select.style.width = "100%";
   select.className = "exercise-select";
 
+  // Contenedor de chips visuales
+  const list = document.createElement("div");
+  list.className = "day-exercise-list";
+
+  // Botón Registrar mesociclo
   const saveBtn = document.createElement("button");
   saveBtn.textContent = "Registrar mesociclo";
+  saveBtn.className = "register-btn";
   saveBtn.onclick = async () => {
     const activeDay = dayDiv.querySelector(".day-mini-btn.active");
     if (!activeDay) return alert("Selecciona un día");
     const day = parseInt(activeDay.textContent.replace("Día ", ""));
     const week = parseInt(weekSelect.value);
     await saveDayExercises(select, mesocycleId, day, week);
-    await renderExercisesForRegistro(mesocycleId, day, week, template);
+    await renderExercisesForRegistro(container, mesocycleId, day, week, template);
   };
 
-  const list = document.createElement("div");
-  list.className = "day-exercise-list";
-
-  registroEditor.appendChild(select);
-  registroEditor.appendChild(saveBtn);
-  registroEditor.appendChild(list);
+  container.appendChild(select);
+  container.appendChild(list);
+  container.appendChild(saveBtn);
+  registroEditor.appendChild(container);
 }
 
 /* ======================
-   RENDER + SAVE EXERCISES REGISTRO
+   RENDER EJERCICIOS CON CHIPS
 ====================== */
-async function renderExercisesForRegistro(mesocycleId, day, week, template) {
-  const select = registroEditor.querySelector(".exercise-select");
-  const list = registroEditor.querySelector(".day-exercise-list");
+async function renderExercisesForRegistro(container, mesocycleId, day, week, template) {
+  const select = container.querySelector(".exercise-select");
+  const list = container.querySelector(".day-exercise-list");
   select.innerHTML = "";
   list.innerHTML = "";
 
+  // Cargar ejercicios disponibles
   let query = supabase.from("exercises").select("id,name,subgroup").order("name");
   if (template.emphasis && template.emphasis !== "Todos") query = query.in("subgroup", template.emphasis.split(","));
   const { data: exercises } = await query;
@@ -248,6 +261,7 @@ async function renderExercisesForRegistro(mesocycleId, day, week, template) {
     select.appendChild(opt);
   });
 
+  // Cargar ejercicios guardados
   const { data: saved } = await supabase.from("mesocycle_exercises")
     .select("exercise_id")
     .eq("mesocycle_id", mesocycleId)
@@ -263,6 +277,21 @@ async function renderExercisesForRegistro(mesocycleId, day, week, template) {
       const chip = document.createElement("div");
       chip.className = "exercise-chip";
       chip.textContent = `${ex.name} (${ex.subgroup})`;
+
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "×";
+      delBtn.onclick = async () => {
+        await supabase.from("mesocycle_exercises")
+          .delete()
+          .eq("mesocycle_id", mesocycleId)
+          .eq("day_number", day)
+          .eq("week_number", week)
+          .eq("exercise_id", ex.id);
+        chip.remove();
+        const opt = [...select.options].find(o => o.value == ex.id);
+        if (opt) opt.selected = false;
+      };
+      chip.appendChild(delBtn);
       list.appendChild(chip);
     }
   });
