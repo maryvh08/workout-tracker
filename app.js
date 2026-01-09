@@ -352,8 +352,8 @@ async function loadHistory() {
     li.className = "history-card";
 
     li.innerHTML = `
-      <h4>${m.name} · ${m.weeks} semanas · ${m.days_per_week} días</h4>
       <p class="template-name">Plantilla: ${template.name}</p>
+      <h4>${m.name} · ${m.weeks} semanas · ${m.days_per_week} días</h4>
     `;
 
     // ...aquí iría la lógica de botones de día y semana que ya tenías
