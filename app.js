@@ -142,15 +142,21 @@ document.getElementById("create-mesocycle-btn").onclick = async () => {
 /* ======================
    MESOCYCLES LIST
 ====================== */
-const mesocycleList = document.getElementById("mesocycle-list");
+const mesocycleList = document.getElementById("mesocycle-list"); // <-- declarar primero
+console.log("mesocycleList:", mesocycleList);
 
 async function loadMesocycles() {
   const { data, error } = await supabase
     .from("mesocycles")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("id", { ascending: false }); // temporal si created_at no existe
 
   if (error) return console.error(error);
+
+  if (!data.length) {
+    mesocycleList.innerHTML = "<li>No hay mesociclos</li>";
+    return;
+  }
 
   mesocycleList.innerHTML = "";
 
