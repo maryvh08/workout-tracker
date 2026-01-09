@@ -239,6 +239,33 @@ async function renderCardEditor(editor, mesocycle) {
     await renderExercisesForDay(editor, mesocycle, day, template);
   };
 
+  // Crear selector de semanas
+const weekSelect = document.createElement("select");
+  weekSelect.id = "week-select";
+  for (let w = 1; w <= mesocycle.weeks; w++) {
+    const opt = document.createElement("option");
+    opt.value = w;
+    opt.textContent = `Semana ${w}`;
+    weekSelect.appendChild(opt);
+  }
+  editor.appendChild(weekSelect);
+  
+  // Crear botones de días
+  const dayButtonsDiv = document.createElement("div");
+  for (let i = 1; i <= mesocycle.days_per_week; i++) {
+    const btn = document.createElement("button");
+    btn.textContent = `Día ${i}`;
+    btn.className = "day-mini-btn";
+    btn.onclick = async () => {
+      editor.querySelectorAll(".day-mini-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const selectedWeek = parseInt(weekSelect.value);
+      await renderExercisesForDay(editor, mesocycle, i, selectedWeek, template);
+    };
+    dayButtonsDiv.appendChild(btn);
+  }
+  editor.appendChild(dayButtonsDiv);
+
   const hint = document.createElement("p");
   hint.className = "day-hint";
   hint.textContent = "Selecciona un día para configurar ejercicios";
@@ -255,35 +282,24 @@ async function renderCardEditor(editor, mesocycle) {
 /* ======================
    RENDER EXERCISES
 ====================== */
-async function renderExercisesForDay(editor, mesocycle, day, template) {
+async function renderExercisesForDay(editor, mesocycle, day, week, template) {
   const select = editor.querySelector(".exercise-select");
   const list = editor.querySelector(".day-exercise-list");
   select.innerHTML = "";
   list.innerHTML = "";
 
+  // Cargar ejercicios según plantilla
   let query = supabase.from("exercises").select("id,name,subgroup").order("name");
-  if (template.emphasis !== "Todos") {
-    query = query.in("subgroup", template.emphasis.split(","));
-  }
+  if (template.emphasis !== "Todos") query = query.in("subgroup", template.emphasis.split(","));
   const { data: exercises } = await query;
 
-  if (!exercises.length) {
-    select.innerHTML = "<option>No hay ejercicios</option>";
-    return;
-  }
-
-  exercises.forEach(ex => {
-    const opt = document.createElement("option");
-    opt.value = ex.id;
-    opt.textContent = `${ex.name} (${ex.subgroup})`;
-    select.appendChild(opt);
-  });
-
+  // Obtener ejercicios ya guardados para día+semana
   const { data: saved } = await supabase
     .from("mesocycle_exercises")
     .select("exercise_id")
     .eq("mesocycle_id", mesocycle.id)
-    .eq("day_number", day);
+    .eq("day_number", day)
+    .eq("week_number", week);
 
   const savedIds = saved.map(r => r.exercise_id);
   [...select.options].forEach(o => o.selected = savedIds.includes(o.value));
@@ -319,18 +335,20 @@ async function renderExercisesForDay(editor, mesocycle, day, template) {
 /* ======================
    SAVE EXERCISES
 ====================== */
-async function saveDayExercises(select, mesocycleId, day) {
+async function saveDayExercises(select, mesocycleId, day, week) {
   const values = [...select.selectedOptions].map(o => ({
     mesocycle_id: mesocycleId,
     exercise_id: o.value,
-    day_number: day
+    day_number: day,
+    week_number: week
   }));
 
   await supabase
     .from("mesocycle_exercises")
     .delete()
     .eq("mesocycle_id", mesocycleId)
-    .eq("day_number", day);
+    .eq("day_number", day)
+    .eq("week_number", week);
 
   if (values.length) {
     await supabase.from("mesocycle_exercises").insert(values);
