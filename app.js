@@ -272,13 +272,47 @@ function loadDays(mesocycle) {
   }
 }
 
+daySelect.onchange = async () => {
+  if (!daySelect.value || !activeMesocycle) return;
+
+  const day = parseInt(daySelect.value);
+
+  // limpiar checks
+  exerciseConfig
+    .querySelectorAll("input[type='checkbox']")
+    .forEach(cb => cb.checked = false);
+
+  // cargar ejercicios guardados de ese día
+  const { data, error } = await supabase
+    .from("mesocycle_exercises")
+    .select("exercise_id")
+    .eq("mesocycle_id", activeMesocycle.id)
+    .eq("day_number", day);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  const selected = data.map(r => r.exercise_id);
+
+  // marcar los que corresponden
+  exerciseConfig
+    .querySelectorAll("input[type='checkbox']")
+    .forEach(cb => {
+      if (selected.includes(cb.value)) {
+        cb.checked = true;
+      }
+    });
+};
+
 async function openMesocycleConfig(mesocycle) {
   activeMesocycle = mesocycle;
   configTitle.textContent = `Configurar: ${mesocycle.name}`;
   configView.style.display = "block";
 
   loadDays(mesocycle);
-  renderExerciseChecklist(mesocycle);
+  await renderExerciseChecklist(mesocycle);
 }
 
 document.getElementById("save-day-btn").onclick = async () => {
