@@ -287,10 +287,10 @@ function loadDays(mesocycle) {
 daySelect.onchange = async () => {
   if (!daySelect.value || !activeMesocycle) return;
 
-  await loadDayExercises(
-    activeMesocycle.id,
-    parseInt(daySelect.value)
-  );
+  exerciseConfig.style.display = "block";
+
+  await renderExerciseSelect(activeMesocycle);
+  await loadDayExercises(activeMesocycle.id, parseInt(daySelect.value));
 };
 
 async function openMesocycleConfig(mesocycle) {
