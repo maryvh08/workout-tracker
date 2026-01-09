@@ -128,7 +128,7 @@ async function loadMesocycles() {
     li.innerHTML = `
       <p class="template-name">Plantilla: ${template.name}</p>
       <h4>${m.name} · ${m.weeks} semanas · ${m.days_per_week} días</h4>
-      <button class="edit-mesocycle-btn">Editar mesociclo</button>
+      <button class="edit-mesocycle-btn">Registro de mesociclo</button>
     `;
     const editBtn = li.querySelector(".edit-mesocycle-btn");
     editBtn.onclick = () => openRegistroEditor(m.id);
