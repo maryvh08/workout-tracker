@@ -1,8 +1,8 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 let activeMesocycle = null;
-const daySelect = document.getElementById("day-select");
-const exerciseSelect = document.getElementById("exercise-select");
-const exerciseConfig = document.getElementById("exercise-config");
+console.log("daySelect:", daySelect);
+console.log("exerciseSelect:", exerciseSelect);
+console.log("exerciseConfig:", exerciseConfig);
 console.log("exerciseSelect:", exerciseSelect);
 const SUPABASE_URL = "https://vhwfenefevzzksxrslkx.supabase.co";
 const SUPABASE_ANON_KEY =
