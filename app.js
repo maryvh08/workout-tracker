@@ -65,9 +65,9 @@ async function checkSession() {
 function showApp() {
   loginView.style.display = "none";
   appView.style.display = "block";
+  loadTemplates();
   loadMesocycles();
 }
-
 function showLogin() {
   loginView.style.display = "block";
   appView.style.display = "none";
