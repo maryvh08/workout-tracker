@@ -342,7 +342,22 @@ async function loadHistory() {
     const li = document.createElement("li");
     li.className = "history-card";
     li.innerHTML = `<h4>${m.name} · ${m.weeks} semanas · ${m.days_per_week} días</h4>`;
-    
+
+    // Botón para abrir editor
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "Editar desde Historial";
+    editBtn.className = "edit-from-history-btn";
+    editBtn.onclick = async () => {
+      // Abrir el editor completo como en la sección principal
+      li.querySelectorAll(".editor").forEach(e => e.remove()); // eliminar si ya existe
+      const editor = document.createElement("div");
+      editor.className = "editor";
+      li.appendChild(editor);
+      await renderCardEditor(editor, m);
+      editor.classList.remove("hidden");
+    };
+    li.appendChild(editBtn);
+
     const weekSelect = document.createElement("select");
     for (let w = 1; w <= m.weeks; w++) {
       const opt = document.createElement("option");
