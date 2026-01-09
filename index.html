@@ -21,15 +21,14 @@
     <p id="auth-message"></p>
   </section>
 
-  <!-- APP (oculta al inicio) -->
+  <!-- APP -->
   <section id="app-view" style="display:none;">
     <h1>Mesocycle Planner</h1>
-
     <button id="logout-btn">Cerrar sesión</button>
 
-    <div id="content">
+    <!-- CREAR MESOCICLO -->
+    <div id="create-section">
       <h2>Crear mesociclo</h2>
-
       <input type="text" id="mesocycle-name" placeholder="Nombre del mesociclo" />
       <input type="number" id="mesocycle-weeks" placeholder="Semanas" min="1" />
 
@@ -39,41 +38,24 @@
         <button class="day-btn" data-days="2">2</button>
         <button class="day-btn" data-days="3">3</button>
         <button class="day-btn" data-days="4">4</button>
+        <button class="day-btn" data-days="5">5</button>
+        <button class="day-btn" data-days="6">6</button>
+        <button class="day-btn" data-days="7">7</button>
       </div>
-        <h3>Plantilla</h3>
-        <select id="template-select">
-          <option value="">Selecciona una plantilla</option>
-        </select>
-      </div>
-      <hr />
+
+      <h3>Plantilla</h3>
+      <select id="template-select">
+        <option value="">Selecciona una plantilla</option>
+      </select>
 
       <button id="create-mesocycle-btn">Crear mesociclo</button>
-
-      <div id="config-view" style="display:none">
-        <h3 id="config-title"></h3>
-      
-        <label for="day-select">Día</label>
-        <p id="day-hint">Selecciona un día para configurar ejercicios</p>
-        <select id="day-select">
-          <option value="">Selecciona un día</option>
-        </select>
-      
-        <div id="exercise-config" style="display:none">
-          <h4>Ejercicios</h4>
-        
-          <select
-            id="exercise-select"
-            multiple
-            size="10"
-            style="width:100%"
-          ></select>
-        
-          <button id="save-day-btn">Guardar día</button>
-        </div>
-   
-      <h2>Mis mesociclos</h2>
-      <ul id="mesocycle-list"></ul>
     </div>
+
+    <hr />
+
+    <!-- HISTORIAL DE MESOCICLOS -->
+    <h2>Mis mesociclos</h2>
+    <ul id="mesocycle-list"></ul>
   </section>
 
   <script type="module" src="app.js"></script>
