@@ -2,7 +2,7 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const SUPABASE_URL = "https://vhwfenefevzzksxrslkx.supabase.co";
 const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZod2ZlbmVmZXZ6emtzeHJzbGt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5MTE3ODAsImV4cCI6MjA4MzQ4Nzc4MH0.CG1KzxpxGHifXsgBvH-4E4WvXbj6d-8WsagqaHAtVwo";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZlbmVmZXZ6emtzeHJzbGt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5MTE3ODAsImV4cCI6MjA4MzQ4Nzc4MH0.CG1KzxpxGHifXsgBvH-4E4WvXbj6d-8WsagqaHAtVwo";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -14,10 +14,9 @@ const appView = document.getElementById("app-view");
 const message = document.getElementById("auth-message");
 
 const templateSelect = document.getElementById("template-select");
-const mesocycleList = document.getElementById("mesocycle-list"); // Historial
-const historyList = document.getElementById("history-list"); 
-const registroSelect = document.getElementById("registro-select"); // Selector mesociclo en Registro
-const registroEditor = document.getElementById("registro-editor"); // Panel para editar y registrar
+const historyList = document.getElementById("history-list");
+const registroSelect = document.getElementById("registro-select");
+const registroEditor = document.getElementById("registro-editor");
 
 /* ======================
    AUTH
@@ -61,7 +60,6 @@ function showApp() {
   appView.style.display = "block";
   loadTemplates();
   loadMesocycles();
-  loadHistory();
   setupTabs();
 }
 
@@ -81,7 +79,6 @@ function setupTabs() {
     btn.onclick = () => {
       tabButtons.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
-
       const target = btn.dataset.tab;
       tabContents.forEach(tab => tab.classList.add("hidden"));
       document.getElementById(target).classList.remove("hidden");
@@ -119,14 +116,13 @@ async function loadMesocycles() {
     .order("created_at", { ascending: false });
   if (error) return console.error(error);
 
-  // HISTORIAL
   historyList.innerHTML = "";
   registroSelect.innerHTML = '<option value="">Selecciona un mesociclo</option>';
 
   for (const m of data) {
     const template = await getTemplateById(m.template_id);
 
-    // 1️⃣ Historial
+    // Historial
     const li = document.createElement("li");
     li.className = "history-card";
     li.innerHTML = `
@@ -138,7 +134,7 @@ async function loadMesocycles() {
     editBtn.onclick = () => openRegistroEditor(m.id);
     historyList.appendChild(li);
 
-    // 2️⃣ Registro select
+    // Registro select
     const opt = document.createElement("option");
     opt.value = m.id;
     opt.textContent = m.name;
@@ -165,14 +161,13 @@ async function openRegistroEditor(id) {
 ====================== */
 async function renderRegistroEditor(mesocycleId) {
   registroEditor.innerHTML = "";
-  const mesocycle = await supabase.from("mesocycles").select("*").eq("id", mesocycleId).single().then(r => r.data);
+  const { data: mesocycle } = await supabase.from("mesocycles").select("*").eq("id", mesocycleId).single();
   const template = await getTemplateById(mesocycle.template_id);
 
-  // Contenedor principal
   const container = document.createElement("div");
   container.className = "registro-container";
 
-  // Selector de semana
+  // Selector semana
   const weekSelect = document.createElement("select");
   weekSelect.className = "week-select";
   for (let w = 1; w <= mesocycle.weeks; w++) {
@@ -183,7 +178,7 @@ async function renderRegistroEditor(mesocycleId) {
   }
   container.appendChild(weekSelect);
 
-  // Botones de días
+  // Botones días
   const dayDiv = document.createElement("div");
   dayDiv.className = "day-buttons";
   for (let i = 1; i <= mesocycle.days_per_week; i++) {
@@ -199,7 +194,11 @@ async function renderRegistroEditor(mesocycleId) {
   }
   container.appendChild(dayDiv);
 
-  // Listener al cambiar semana
+  // Activar automáticamente primer día
+  const firstDay = dayDiv.querySelector(".day-mini-btn");
+  if (firstDay) firstDay.click();
+
+  // Cambio de semana
   weekSelect.onchange = async () => {
     const activeDay = dayDiv.querySelector(".day-mini-btn.active");
     if (activeDay) {
@@ -215,11 +214,10 @@ async function renderRegistroEditor(mesocycleId) {
   select.style.width = "100%";
   select.className = "exercise-select";
 
-  // Contenedor de chips visuales
   const list = document.createElement("div");
   list.className = "day-exercise-list";
 
-  // Botón Registrar mesociclo
+  // Botón registrar mesociclo
   const saveBtn = document.createElement("button");
   saveBtn.textContent = "Registrar mesociclo";
   saveBtn.className = "register-btn";
@@ -297,6 +295,9 @@ async function renderExercisesForRegistro(container, mesocycleId, day, week, tem
   });
 }
 
+/* ======================
+   SAVE DAY EXERCISES
+====================== */
 async function saveDayExercises(select, mesocycleId, day, week) {
   const values = [...select.selectedOptions].map(o => ({
     mesocycle_id: mesocycleId,
