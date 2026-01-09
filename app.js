@@ -233,53 +233,44 @@ document.querySelectorAll(".day-btn").forEach((btn) => {
 const configView = document.getElementById("config-view");
 const configTitle = document.getElementById("config-title");
 
-async function loadExercisesForTemplate(templateId) {
-  const { data: template, error } = await supabase
-    .from("templates")
-    .select("emphasis")
-    .eq("id", templateId)
-    .single();
+async function loadExercisesByTemplate(template) {
+  let query = supabase
+    .from("exercises")
+    .select("id, name, subgroup")
+    .order("name");
+
+  if (template.emphasis !== "Todos") {
+    const emphasisList = template.emphasis.split(",");
+
+    query = query.in("subgroup", emphasisList);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
-    console.error(error);
+    console.error("Error cargando ejercicios:", error);
     return [];
   }
 
-  // Todos los ejercicios
-  if (!template.emphasis || template.emphasis === "Todos") {
-    const { data } = await supabase.from("exercises").select("*");
-    return data || [];
-  }
-
-  const groups = template.emphasis.split(",").map(e => e.trim());
-
-  const { data } = await supabase
-    .from("exercises")
-    .select("*")
-    .in("subgroup", groups);
-
-  return data || [];
+  return data;
 }
 
-async function renderExerciseSelect(mesocycle) {
-  console.log("Mesocycle:", mesocycle);
+async function renderExerciseSelector(template) {
+  const select = document.getElementById("exercise-select");
+  select.innerHTML = "";
 
-  const exercises = await loadExercisesForTemplate(mesocycle.template_id);
+  const exercises = await loadExercisesByTemplate(template);
 
-  console.log("Exercises recibidos:", exercises);
-
-  exerciseSelect.innerHTML = "";
-
-  if (!exercises || exercises.length === 0) {
-    exerciseSelect.innerHTML = "<option>No hay ejercicios</option>";
+  if (exercises.length === 0) {
+    select.innerHTML = `<option value="">No hay ejercicios</option>`;
     return;
   }
 
-  exercises.forEach(e => {
-    const opt = document.createElement("option");
-    opt.value = e.id;
-    opt.textContent = e.name;
-    exerciseSelect.appendChild(opt);
+  exercises.forEach(ex => {
+    const option = document.createElement("option");
+    option.value = ex.id;
+    option.textContent = `${ex.name} (${ex.subgroup})`;
+    select.appendChild(option);
   });
 }
 
