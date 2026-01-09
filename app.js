@@ -101,32 +101,41 @@ async function loadMesocycles() {
     .select("*")
     .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error(error);
-    return;
-  }
+  if (error) return console.error(error);
 
   mesocycleList.innerHTML = "";
 
-  data.forEach((m) => {
+  data.forEach(m => {
     const li = document.createElement("li");
-    li.style.display = "flex";
-    li.style.justifyContent = "space-between";
-    li.style.alignItems = "center";
-  
-    const info = document.createElement("span");
-    info.textContent = `${m.name} – ${m.weeks} semanas – ${m.days_per_week} días`;
-  
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "✏️ Editar";
-    editBtn.onclick = () => openMesocycleConfig(m);
-  
-    li.appendChild(info);
-    li.appendChild(editBtn);
-  
-    mesocycleList.appendChild(li);
-  });
+    li.className = "mesocycle-card";
 
+    li.innerHTML = `
+      <header>
+        <h3>${m.name}</h3>
+        <span>${m.weeks} semanas · ${m.days_per_week} días</span>
+      </header>
+
+      <button class="edit-btn">Editar</button>
+
+      <section class="editor hidden">
+        <label>Día</label>
+        <select class="day-select"></select>
+
+        <label>Ejercicios</label>
+        <select class="exercise-select" multiple></select>
+
+        <button class="save-day-btn">Guardar día</button>
+        <p class="day-hint"></p>
+
+        <h4>Ejercicios del día</h4>
+        <ul class="day-exercise-list"></ul>
+      </section>
+    `;
+
+    mesocycleList.appendChild(li);
+
+    setupMesocycleEditor(li, m);
+  });
 }
 
 /* ======================
@@ -253,6 +262,40 @@ async function loadExercisesByTemplate(template) {
   }
 
   return data;
+}
+
+function setupMesocycleEditor(card, mesocycle) {
+  const editBtn = card.querySelector(".edit-btn");
+  const editor = card.querySelector(".editor");
+  const daySelect = card.querySelector(".day-select");
+  const exerciseSelect = card.querySelector(".exercise-select");
+  const saveBtn = card.querySelector(".save-day-btn");
+  const hint = card.querySelector(".day-hint");
+  const list = card.querySelector(".day-exercise-list");
+
+  editBtn.onclick = () => {
+    editor.classList.toggle("hidden");
+    loadDaysForCard(daySelect, mesocycle.days_per_week);
+  };
+
+  daySelect.onchange = async () => {
+    const day = parseInt(daySelect.value);
+    if (!day) return;
+
+    const template = await getTemplateById(mesocycle.template_id);
+    await renderExerciseSelectorForCard(exerciseSelect, template);
+    await loadDayExercisesForCard(exerciseSelect, mesocycle.id, day);
+    await renderDayExercisesForCard(list, mesocycle.id, day);
+  };
+
+  saveBtn.onclick = async () => {
+    const day = parseInt(daySelect.value);
+    if (!day) return;
+
+    await saveDayExercisesForCard(exerciseSelect, mesocycle.id, day);
+    hint.textContent = `Día ${day} guardado ✅`;
+    await renderDayExercisesForCard(list, mesocycle.id, day);
+  };
 }
 
 async function renderExerciseSelector(template) {
