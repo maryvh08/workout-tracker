@@ -104,14 +104,13 @@ document.getElementById("create-mesocycle-btn").onclick = async () => {
     return;
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data, error } = await supabase.from("mesocycles").insert({
-    name,
-    weeks,
-    days_per_week: selectedDays,
-    template_id: templateId,
-    user_id: user.id
-  }).select().single();
+   const { data: { user } } = await supabase.auth.getUser();
+   const { data, error } = await supabase
+     .from("mesocycles")
+     .select("*")
+     .eq("user_id", user.id)
+     .order("created_at", { ascending: false });
+
 
   if (error) return alert(error.message);
 
