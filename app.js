@@ -258,6 +258,17 @@ async function renderCardEditor(editor, mesocycle) {
   editor.appendChild(list);
 }
 
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    const target = btn.dataset.tab;
+    document.querySelectorAll(".tab-content").forEach(tab => tab.classList.add("hidden"));
+    document.getElementById(target).classList.remove("hidden");
+  };
+});
+
 async function renderExercisesForDay(editor, mesocycle, day, template) {
   const select = editor.querySelector(".exercise-select");
   const list = editor.querySelector(".day-exercise-list");
