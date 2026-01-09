@@ -52,15 +52,16 @@
       <div id="config-view" style="display:none">
         <h3 id="config-title"></h3>
       
-        <!-- Selector de día -->
-        <label for="day-select">Día</label>
-        <select id="day-select"></select>
+        <label for="day-select">Selecciona un día</label>
+        <select id="day-select">
+          <option value="">-- Día --</option>
+        </select>
       
-        <!-- Ejercicios del día -->
-        <h4>Ejercicios para este día</h4>
-        <div id="exercise-config" class="exercise-list">
-          <!-- checkboxes se inyectan aquí -->
-        </div>
+        <p id="exercise-hint" style="opacity:.7; margin-top:.5rem;">
+          Selecciona un día para configurar los ejercicios
+        </p>
+      
+        <div id="exercise-config" style="display:none;"></div>
       
         <button id="save-day-btn">Guardar día</button>
       </div>
