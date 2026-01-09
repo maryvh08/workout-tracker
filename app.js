@@ -12,6 +12,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const loginView = document.getElementById("login-view");
 const appView = document.getElementById("app-view");
 const message = document.getElementById("auth-message");
+
 const templateSelect = document.getElementById("template-select");
 const mesocycleList = document.getElementById("mesocycle-list");
 
@@ -59,7 +60,7 @@ function showApp() {
   appView.style.display = "block";
   loadTemplates();
   loadMesocycles();
-  setupTabs(); // ← aquí
+  setupTabs(); // Configura las pestañas
 }
 
 function showLogin() {
@@ -67,6 +68,9 @@ function showLogin() {
   appView.style.display = "none";
 }
 
+/* ======================
+   TABS
+====================== */
 function setupTabs() {
   const tabButtons = document.querySelectorAll(".tab-btn");
   const tabContents = document.querySelectorAll(".tab-content");
@@ -104,46 +108,47 @@ async function getTemplateById(id) {
   return data;
 }
 
-// Dentro de renderCardEditor, después del saveBtn
-const deleteBtn = document.createElement("button");
-deleteBtn.textContent = "Borrar día";
-deleteBtn.className = "delete-day-btn";
-deleteBtn.onclick = async () => {
-  const activeDayBtn = editor.querySelector(".day-mini-btn.active");
-  if (!activeDayBtn) return alert("Selecciona un día");
-
-  const day = parseInt(activeDayBtn.textContent.replace("Día ", ""));
-  await supabase
-    .from("mesocycle_exercises")
-    .delete()
-    .eq("mesocycle_id", mesocycle.id)
-    .eq("day_number", day);
-
-  // Limpiar UI
-  const select = editor.querySelector(".exercise-select");
-  const list = editor.querySelector(".day-exercise-list");
-  select.selectedIndex = -1;
-  list.innerHTML = "";
-  const hint = editor.querySelector(".day-hint");
-  hint.textContent = `Día ${day} borrado ✅`;
-};
-
-editor.appendChild(deleteBtn);
-
 /* ======================
    CREATE MESOCYCLE
 ====================== */
 let selectedDays = null;
-document.querySelectorAll(".tab-btn").forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
 
-    const target = btn.dataset.tab;
-    document.querySelectorAll(".tab-content").forEach(tab => tab.classList.add("hidden"));
-    document.getElementById(target).classList.remove("hidden");
+document.querySelectorAll(".day-btn").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll(".day-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    selectedDays = parseInt(btn.dataset.days);
   };
 });
+
+document.getElementById("create-mesocycle-btn").onclick = async () => {
+  const name = document.getElementById("mesocycle-name").value;
+  const weeks = parseInt(document.getElementById("mesocycle-weeks").value);
+  const templateId = templateSelect.value;
+
+  if (!name || !weeks || !templateId || !selectedDays) {
+    alert("Completa todos los campos");
+    return;
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const { error } = await supabase.from("mesocycles").insert({
+    name,
+    weeks,
+    days_per_week: selectedDays,
+    template_id: templateId,
+    user_id: user.id
+  });
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  alert("Mesociclo creado ✅");
+  loadMesocycles();
+};
 
 /* ======================
    LOAD MESOCYCLES
@@ -186,7 +191,6 @@ function setupMesocycleCard(card, mesocycle) {
   editBtn.onclick = async () => {
     editor.classList.toggle("hidden");
     if (!editor.innerHTML.trim()) {
-      // Crear contenido del editor solo una vez
       await renderCardEditor(editor, mesocycle);
     }
   };
@@ -198,7 +202,7 @@ async function renderCardEditor(editor, mesocycle) {
     ? template.emphasis.split(",")
     : [];
 
-  // Crear mini-botones de días
+  // Mini-botones de días
   const dayButtonsDiv = document.createElement("div");
   for (let i = 1; i <= mesocycle.days_per_week; i++) {
     const btn = document.createElement("button");
@@ -211,10 +215,9 @@ async function renderCardEditor(editor, mesocycle) {
     };
     dayButtonsDiv.appendChild(btn);
   }
-
   editor.appendChild(dayButtonsDiv);
 
-  // Contenedor de ejercicios
+  // Select de ejercicios
   const exerciseSelect = document.createElement("select");
   exerciseSelect.multiple = true;
   exerciseSelect.size = 10;
@@ -240,7 +243,7 @@ async function renderCardEditor(editor, mesocycle) {
   hint.className = "day-hint";
   hint.textContent = "Selecciona un día para configurar ejercicios";
 
-  const list = document.createElement("ul");
+  const list = document.createElement("div");
   list.className = "day-exercise-list";
 
   editor.appendChild(exerciseSelect);
@@ -249,24 +252,15 @@ async function renderCardEditor(editor, mesocycle) {
   editor.appendChild(list);
 }
 
-document.querySelectorAll(".tab-btn").forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-
-    const target = btn.dataset.tab;
-    document.querySelectorAll(".tab-content").forEach(tab => tab.classList.add("hidden"));
-    document.getElementById(target).classList.remove("hidden");
-  };
-});
-
+/* ======================
+   RENDER EXERCISES
+====================== */
 async function renderExercisesForDay(editor, mesocycle, day, template) {
   const select = editor.querySelector(".exercise-select");
   const list = editor.querySelector(".day-exercise-list");
   select.innerHTML = "";
   list.innerHTML = "";
 
-  // Cargar ejercicios
   let query = supabase.from("exercises").select("id,name,subgroup").order("name");
   if (template.emphasis !== "Todos") {
     query = query.in("subgroup", template.emphasis.split(","));
@@ -285,7 +279,6 @@ async function renderExercisesForDay(editor, mesocycle, day, template) {
     select.appendChild(opt);
   });
 
-  // Seleccionar ya guardados
   const { data: saved } = await supabase
     .from("mesocycle_exercises")
     .select("exercise_id")
@@ -295,7 +288,6 @@ async function renderExercisesForDay(editor, mesocycle, day, template) {
   const savedIds = saved.map(r => r.exercise_id);
   [...select.options].forEach(o => o.selected = savedIds.includes(o.value));
 
-  // Mostrar chips
   saved.forEach(r => {
     const ex = exercises.find(e => e.id === r.exercise_id);
     if (ex) {
@@ -314,7 +306,6 @@ async function renderExercisesForDay(editor, mesocycle, day, template) {
           .eq("exercise_id", ex.id);
 
         chip.remove();
-        // Desmarcar en select
         const option = [...select.options].find(o => o.value == ex.id);
         if (option) option.selected = false;
       };
@@ -325,6 +316,9 @@ async function renderExercisesForDay(editor, mesocycle, day, template) {
   });
 }
 
+/* ======================
+   SAVE EXERCISES
+====================== */
 async function saveDayExercises(select, mesocycleId, day) {
   const values = [...select.selectedOptions].map(o => ({
     mesocycle_id: mesocycleId,
