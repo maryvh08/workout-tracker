@@ -133,7 +133,7 @@ async function loadMesocycles() {
 
   data.forEach((m) => {
     const li = document.createElement("li");
-    li.textContent = `${m.name} – ${m.weeks} semanas`;
+    li.textContent = `${m.name} – ${m.weeks} semanas – ${m.days_per_week} días`;
     mesocycleList.appendChild(li);
   });
 }
