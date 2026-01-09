@@ -198,20 +198,30 @@ function setupMesocycleCard(card, mesocycle) {
 
 async function renderCardEditor(editor, mesocycle) {
   const template = await getTemplateById(mesocycle.template_id);
-  const exercises = template.emphasis !== "Todos"
-    ? template.emphasis.split(",")
-    : [];
 
-  // Mini-botones de días
+  // Selector de semana
+  const weekSelect = document.createElement("select");
+  weekSelect.id = "week-select";
+  for (let w = 1; w <= mesocycle.weeks; w++) {
+    const opt = document.createElement("option");
+    opt.value = w;
+    opt.textContent = `Semana ${w}`;
+    weekSelect.appendChild(opt);
+  }
+  editor.appendChild(weekSelect);
+
+  // Botones de días
   const dayButtonsDiv = document.createElement("div");
   for (let i = 1; i <= mesocycle.days_per_week; i++) {
     const btn = document.createElement("button");
     btn.textContent = `Día ${i}`;
     btn.className = "day-mini-btn";
     btn.onclick = async () => {
-      editor.querySelectorAll(".day-mini-btn").forEach(b => b.classList.remove("active"));
+      dayButtonsDiv.querySelectorAll(".day-mini-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
-      await renderExercisesForDay(editor, mesocycle, i, template);
+
+      const selectedWeek = parseInt(weekSelect.value);
+      await renderExercisesForDay(editor, mesocycle, i, selectedWeek, template);
     };
     dayButtonsDiv.appendChild(btn);
   }
@@ -224,54 +234,27 @@ async function renderCardEditor(editor, mesocycle) {
   exerciseSelect.style.width = "100%";
   exerciseSelect.className = "exercise-select";
 
-  const saveBtn = document.createElement("button");
-  saveBtn.textContent = "Guardar día";
-  saveBtn.onclick = async () => {
-    const activeDayBtn = editor.querySelector(".day-mini-btn.active");
-    if (!activeDayBtn) return alert("Selecciona un día");
-
-    const day = parseInt(activeDayBtn.textContent.replace("Día ", ""));
-    await saveDayExercises(exerciseSelect, mesocycle.id, day);
-
-    const hint = editor.querySelector(".day-hint");
-    hint.textContent = `Día ${day} guardado ✅`;
-
-    await renderExercisesForDay(editor, mesocycle, day, template);
-  };
-
-  // Crear selector de semanas
-const weekSelect = document.createElement("select");
-  weekSelect.id = "week-select";
-  for (let w = 1; w <= mesocycle.weeks; w++) {
-    const opt = document.createElement("option");
-    opt.value = w;
-    opt.textContent = `Semana ${w}`;
-    weekSelect.appendChild(opt);
-  }
-  editor.appendChild(weekSelect);
-  
-  // Crear botones de días
-  const dayButtonsDiv = document.createElement("div");
-  for (let i = 1; i <= mesocycle.days_per_week; i++) {
-    const btn = document.createElement("button");
-    btn.textContent = `Día ${i}`;
-    btn.className = "day-mini-btn";
-    btn.onclick = async () => {
-      editor.querySelectorAll(".day-mini-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      const selectedWeek = parseInt(weekSelect.value);
-      await renderExercisesForDay(editor, mesocycle, i, selectedWeek, template);
-    };
-    dayButtonsDiv.appendChild(btn);
-  }
-  editor.appendChild(dayButtonsDiv);
-
   const hint = document.createElement("p");
   hint.className = "day-hint";
-  hint.textContent = "Selecciona un día para configurar ejercicios";
+  hint.textContent = "Selecciona un día y una semana";
 
   const list = document.createElement("div");
   list.className = "day-exercise-list";
+
+  // Botón guardar
+  const saveBtn = document.createElement("button");
+  saveBtn.textContent = "Guardar día";
+  saveBtn.onclick = async () => {
+    const activeDayBtn = dayButtonsDiv.querySelector(".day-mini-btn.active");
+    if (!activeDayBtn) return alert("Selecciona un día");
+
+    const day = parseInt(activeDayBtn.textContent.replace("Día ", ""));
+    const week = parseInt(weekSelect.value);
+    await saveDayExercises(exerciseSelect, mesocycle.id, day, week);
+
+    hint.textContent = `Día ${day}, semana ${week} guardado ✅`;
+    await renderExercisesForDay(editor, mesocycle, day, week, template);
+  };
 
   editor.appendChild(exerciseSelect);
   editor.appendChild(saveBtn);
