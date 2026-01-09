@@ -108,6 +108,55 @@ function setupDayButtons() {
 /* ======================
    CREATE / EDIT MESOCYCLE
 ====================== */
+const createBtn = document.getElementById("create-mesocycle-btn"); // Botón Guardar
+createBtn.onclick = async () => {
+  const name = mesocycleNameInput.value;
+  const template_id = templateSelect.value;
+  const weeks = parseInt(mesocycleWeeksInput.value);
+  const days_per_week = selectedDays;
+
+  if (!name || !template_id || !weeks || !days_per_week) {
+    return alert("Completa todos los campos");
+  }
+
+  // Obtener ID de usuario
+  const { data: session } = await supabase.auth.getSession();
+  const user_id = session?.user?.id;
+  if (!user_id) return alert("No hay usuario autenticado");
+
+  try {
+    if (editingMesocycleId) {
+      // Actualizar mesociclo existente
+      const { error } = await supabase.from("mesocycles")
+        .update({ name, template_id, weeks, days_per_week })
+        .eq("id", editingMesocycleId)
+        .eq("user_id", user_id);
+      if (error) throw error;
+      editingMesocycleId = null;
+    } else {
+      // Crear nuevo mesociclo
+      const { error } = await supabase.from("mesocycles")
+        .insert({ name, template_id, weeks, days_per_week, user_id });
+      if (error) throw error;
+    }
+
+    // Limpiar formulario
+    mesocycleNameInput.value = "";
+    templateSelect.value = "";
+    mesocycleWeeksInput.value = "";
+    dayButtons.forEach(btn => btn.classList.remove("active"));
+    selectedDays = 0;
+
+    // Recargar historial y registro
+    await loadMesocycles();
+
+    alert("Mesociclo guardado correctamente!");
+  } catch (err) {
+    console.error(err);
+    alert("Error al guardar el mesociclo: " + err.message);
+  }
+};
+
 createBtn.onclick = async () => {
   const name = mesocycleNameInput.value.trim();
   const template_id = templateSelect.value;
