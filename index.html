@@ -33,35 +33,17 @@
          TABS
     ======================= -->
     <div class="tabs">
-      <button class="tab-btn active" data-tab="mesocycles-tab">Mesociclos</button>
+      <button class="tab-btn active" data-tab="create-tab">Crear Mesociclo</button>
+      <button class="tab-btn" data-tab="historial-tab">Historial</button>
       <button class="tab-btn" data-tab="registro-tab">Registro</button>
     </div>
 
     <!-- ======================
          CONTENIDO DE TABS
     ======================= -->
-    <div id="mesocycles-tab" class="tab-content">
-      <h2>Historial de Mesociclos</h2>
-      <ul id="history-list">
-        <!-- Tarjetas de historial inyectadas desde app.js -->
-      </ul>
-    </div>
 
-    <div id="registro-tab" class="tab-content hidden">
-      <h2>Registro de Mesociclo</h2>
-      <label for="registro-select">Selecciona un mesociclo:</label>
-      <select id="registro-select">
-        <option value="">Selecciona un mesociclo</option>
-      </select>
-      <div id="registro-editor">
-        <!-- Editor de días y ejercicios cargado desde app.js -->
-      </div>
-    </div>
-
-    <!-- ======================
-         CREAR MESOCICLO (Opcional)
-    ======================= -->
-    <section id="create-mesocycle">
+    <!-- TAB 1: Crear Mesociclo -->
+    <div id="create-tab" class="tab-content">
       <h2>Crear Mesociclo</h2>
       <input type="text" id="mesocycle-name" placeholder="Nombre del mesociclo">
       <input type="number" id="mesocycle-weeks" placeholder="Semanas">
@@ -78,7 +60,27 @@
         <button class="day-btn" data-days="7">7 días/semana</button>
       </div>
       <button id="create-mesocycle-btn">Crear mesociclo</button>
-    </section>
+    </div>
+
+    <!-- TAB 2: Historial -->
+    <div id="historial-tab" class="tab-content hidden">
+      <h2>Historial de Mesociclos</h2>
+      <ul id="history-list">
+        <!-- Tarjetas de historial inyectadas desde app.js -->
+      </ul>
+    </div>
+
+    <!-- TAB 3: Registro -->
+    <div id="registro-tab" class="tab-content hidden">
+      <h2>Registro de Mesociclo</h2>
+      <label for="registro-select">Selecciona un mesociclo:</label>
+      <select id="registro-select">
+        <option value="">Selecciona un mesociclo</option>
+      </select>
+      <div id="registro-editor">
+        <!-- Editor de días y ejercicios cargado desde app.js -->
+      </div>
+    </div>
 
   </div>
 
