@@ -147,11 +147,6 @@ async function createMesocycle() {
     return;
   }
 
-  if (!activeMesocycle) {
-  alert("Selecciona un mesociclo primero");
-  return;
-  }
-
   alert("Mesociclo creado ✅");
 
   document.getElementById("mesocycle-name").value = "";
@@ -275,6 +270,15 @@ async function openMesocycleConfig(mesocycle) {
 }
 
 document.getElementById("save-day-btn").onclick = async () => {
+  if (!activeMesocycle) {
+    alert("Selecciona un mesociclo");
+    return;
+  }
+
+  if (!daySelect.value) {
+    alert("Selecciona un día");
+    return;
+  }
   const day = parseInt(daySelect.value);
 
   const rows = [...exerciseConfig.querySelectorAll("input:checked")].map(
