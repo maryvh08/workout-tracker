@@ -3,87 +3,69 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mesociclos App</title>
+  <title>Mesociclo App</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
-  <!-- ======================
-       LOGIN VIEW
-  ======================= -->
+  <!-- LOGIN VIEW -->
   <div id="login-view">
-    <h1>Inicia sesión</h1>
-    <input type="email" id="email" placeholder="Correo electrónico">
+    <h1>Iniciar Sesión</h1>
+    <input type="email" id="email" placeholder="Correo">
     <input type="password" id="password" placeholder="Contraseña">
-    <button id="login-btn">Iniciar sesión</button>
-    <button id="signup-btn">Crear cuenta</button>
+    <button id="login-btn">Login</button>
+    <button id="signup-btn">Sign Up</button>
     <p id="auth-message"></p>
   </div>
 
-  <!-- ======================
-       APP VIEW
-  ======================= -->
-  <div id="app-view" style="display: none;">
-    <header>
-      <h1>Mesociclos App</h1>
-      <button id="logout-btn">Cerrar sesión</button>
-    </header>
+  <!-- APP VIEW -->
+  <div id="app-view" style="display:none;">
+    <button id="logout-btn">Cerrar sesión</button>
 
-    <!-- ======================
-         TABS
-    ======================= -->
+    <!-- TABS -->
     <div class="tabs">
-      <button class="tab-btn active" data-tab="create-tab">Crear Mesociclo</button>
+      <button class="tab-btn active" data-tab="crear-tab">Crear Mesociclo</button>
       <button class="tab-btn" data-tab="historial-tab">Historial</button>
       <button class="tab-btn" data-tab="registro-tab">Registro</button>
     </div>
 
-    <!-- ======================
-         CONTENIDO DE TABS
-    ======================= -->
-
-    <!-- TAB 1: Crear Mesociclo -->
-    <div id="create-tab" class="tab-content">
-      <h2>Crear Mesociclo</h2>
+    <!-- TAB CONTENIDO -->
+    <div class="tab-content" id="crear-tab">
+      <h2>Crear / Editar Mesociclo</h2>
       <input type="text" id="mesocycle-name" placeholder="Nombre del mesociclo">
-      <input type="number" id="mesocycle-weeks" placeholder="Semanas">
-      <select id="template-select">
-        <option value="">Selecciona una plantilla</option>
-      </select>
-      <div class="day-buttons">
-        <button class="day-btn" data-days="1">1 día/semana</button>
-        <button class="day-btn" data-days="2">2 días/semana</button>
-        <button class="day-btn" data-days="3">3 días/semana</button>
-        <button class="day-btn" data-days="4">4 días/semana</button>
-        <button class="day-btn" data-days="5">5 días/semana</button>
-        <button class="day-btn" data-days="6">6 días/semana</button>
-        <button class="day-btn" data-days="7">7 días/semana</button>
+      
+      <label for="template-select">Selecciona plantilla</label>
+      <select id="template-select"></select>
+
+      <label for="mesocycle-weeks">Semanas</label>
+      <input type="number" id="mesocycle-weeks" min="1" max="12">
+
+      <p>Días de entrenamiento a la semana</p>
+      <div id="day-buttons-container">
+        <button class="day-btn" data-days="1">1</button>
+        <button class="day-btn" data-days="2">2</button>
+        <button class="day-btn" data-days="3">3</button>
+        <button class="day-btn" data-days="4">4</button>
+        <button class="day-btn" data-days="5">5</button>
+        <button class="day-btn" data-days="6">6</button>
+        <button class="day-btn" data-days="7">7</button>
       </div>
-      <button id="create-mesocycle-btn">Crear mesociclo</button>
+
+      <button id="create-mesocycle-btn">Guardar Mesociclo</button>
     </div>
 
-    <!-- TAB 2: Historial -->
-    <div id="historial-tab" class="tab-content hidden">
+    <div class="tab-content hidden" id="historial-tab">
       <h2>Historial de Mesociclos</h2>
-      <ul id="history-list">
-        <!-- Tarjetas de historial inyectadas desde app.js -->
-      </ul>
+      <ul id="history-list"></ul>
     </div>
 
-    <!-- TAB 3: Registro -->
-    <div id="registro-tab" class="tab-content hidden">
+    <div class="tab-content hidden" id="registro-tab">
       <h2>Registro de Mesociclo</h2>
-      <label for="registro-select">Selecciona un mesociclo:</label>
-      <select id="registro-select">
-        <option value="">Selecciona un mesociclo</option>
-      </select>
-      <div id="registro-editor">
-        <!-- Editor de días y ejercicios cargado desde app.js -->
-      </div>
+      <p id="registro-mesocycle-name"><strong>Mesociclo:</strong> <span></span></p>
+      <select id="registro-select"></select>
+      <div id="registro-editor"></div>
     </div>
-
   </div>
 
-  <script type="module" src="app.js"></script>
+  <script src="app.js" type="module"></script>
 </body>
 </html>
