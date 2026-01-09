@@ -13,10 +13,11 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
    DOM ELEMENTS
 ====================== */
 const loginView = document.getElementById("login-view");
+const mesocycleList = document.getElementById("mesocycle-list");
+console.log("mesocycleList:", mesocycleList); // para verificar que NO es null
 const appView = document.getElementById("app-view");
 const message = document.getElementById("auth-message");
 const templateSelect = document.getElementById("template-select");
-const mesocycleList = document.getElementById("mesocycle-list");
 let selectedDays = null;
 
 /* ======================
@@ -125,9 +126,14 @@ async function loadMesocycles() {
   const { data, error } = await supabase
     .from("mesocycles")
     .select("*")
-    .order("id", { ascending: false });
+    .order("created_at", { ascending: false });
 
-  if (error) return console.error(error);
+  if (error) {
+    console.error("Error cargando mesociclos:", error);
+    return;
+  }
+
+  console.log("Mesociclos obtenidos:", data); // <- Verifica que hay datos
 
   mesocycleList.innerHTML = "";
   if (!data.length) {
@@ -136,34 +142,7 @@ async function loadMesocycles() {
   }
 
   data.forEach(m => {
-    const li = document.createElement("li");
-    li.className = "mesocycle-card";
-
-    li.innerHTML = `
-      <header>
-        <h3>${m.name}</h3>
-        <span>${m.weeks} semanas · ${m.days_per_week} días</span>
-      </header>
-
-      <button class="edit-btn">Editar</button>
-
-      <section class="editor hidden">
-        <label>Día</label>
-        <select class="day-select"></select>
-
-        <label>Ejercicios</label>
-        <select class="exercise-select" multiple></select>
-
-        <button class="save-day-btn">Guardar día</button>
-        <p class="day-hint"></p>
-
-        <h4>Ejercicios del día</h4>
-        <ul class="day-exercise-list"></ul>
-      </section>
-    `;
-
-    mesocycleList.appendChild(li);
-    setupMesocycleEditor(li, m);
+    // código para generar la tarjeta
   });
 }
 
