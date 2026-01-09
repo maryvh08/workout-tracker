@@ -106,36 +106,52 @@ function setupDayButtons() {
 }
 
 /* ======================
-   CREATE MESOCYCLE
+   CREATE / EDIT MESOCYCLE
 ====================== */
 const createBtn = document.getElementById("create-mesocycle-btn");
 createBtn.onclick = async () => {
-  const name = mesocycleNameInput.value;
+  const name = mesocycleNameInput.value.trim();
   const template_id = templateSelect.value;
   const weeks = parseInt(mesocycleWeeksInput.value);
   const days_per_week = selectedDays;
 
-  if (!name || !template_id || !weeks || !days_per_week)
+  if (!name || !template_id || !weeks || !days_per_week) {
     return alert("Completa todos los campos");
-
-  if (editingMesocycleId) {
-    await supabase.from("mesocycles")
-      .update({ name, template_id, weeks, days_per_week })
-      .eq("id", editingMesocycleId);
-    editingMesocycleId = null;
-  } else {
-    await supabase.from("mesocycles")
-      .insert({ name, template_id, weeks, days_per_week });
   }
 
-  // Limpiar
-  mesocycleNameInput.value = "";
-  mesocycleWeeksInput.value = "";
-  templateSelect.value = "";
-  document.querySelectorAll(".day-btn").forEach(b => b.classList.remove("active"));
-  selectedDays = 0;
+  try {
+    if (editingMesocycleId) {
+      // Editar mesociclo existente
+      const { error } = await supabase
+        .from("mesocycles")
+        .update({ name, template_id, weeks, days_per_week })
+        .eq("id", editingMesocycleId);
+      if (error) throw error;
+      editingMesocycleId = null;
+    } else {
+      // Crear nuevo mesociclo
+      const { error } = await supabase
+        .from("mesocycles")
+        .insert({ name, template_id, weeks, days_per_week });
+      if (error) throw error;
+    }
 
-  await loadMesocycles();
+    // Limpiar formulario
+    mesocycleNameInput.value = "";
+    mesocycleWeeksInput.value = "";
+    templateSelect.value = "";
+    selectedDays = 0;
+    document.querySelectorAll(".day-btn").forEach(b => b.classList.remove("active"));
+
+    // Recargar historial y select de registro
+    await loadMesocycles();
+
+    alert("Mesociclo guardado correctamente");
+
+  } catch (err) {
+    console.error(err);
+    alert("Error al guardar el mesociclo");
+  }
 };
 
 /* ======================
