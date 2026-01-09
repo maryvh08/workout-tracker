@@ -249,6 +249,24 @@ async function loadExercisesForTemplate(templateId) {
     .in("subgroup", template.emphasis.split(","));
 }
 
+async function renderExerciseSelect(mesocycle) {
+  const { data: exercises, error } =
+    await loadExercisesForTemplate(mesocycle.template_id);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  exerciseSelect.innerHTML = "";
+
+  exercises.forEach(e => {
+    const opt = document.createElement("option");
+    opt.value = e.id;
+    opt.textContent = e.name;
+    exerciseSelect.appendChild(opt);
+  });
+}
 
 function loadDays(mesocycle) {
   if (!mesocycle.days_per_week) {
@@ -267,30 +285,31 @@ function loadDays(mesocycle) {
 }
 
 daySelect.onchange = async () => {
-  if (!daySelect.value) return;
+  if (!activeMesocycle || !daySelect.value) return;
 
   await renderExerciseSelect(activeMesocycle);
-  await loadDayExercises(activeMesocycle.id, parseInt(daySelect.value));
+  await loadDayExercises(
+    activeMesocycle.id,
+    parseInt(daySelect.value)
+  );
 };
 
+async function openMesocycleConfig(mesocycle) {
+  activeMesocycle = mesocycle;
 
-  exerciseConfig.style.display = "block";
-  await renderExerciseChecklist(activeMesocycle);
-};
-  if (!daySelect.value || !activeMesocycle) return;
+  configTitle.textContent = `Configurar: ${mesocycle.name}`;
+  configView.style.display = "block";
 
-  const day = parseInt(daySelect.value);
+  loadDays(mesocycle);
 
-  // limpiar checks
-  exerciseConfig
-    .querySelectorAll("input[type='checkbox']")
-    .forEach(cb => cb.checked = false);
+  exerciseSelect.innerHTML = "";
+}
 
-  // cargar ejercicios guardados de ese día
+async function loadDayExercises(mesocycleId, day) {
   const { data, error } = await supabase
     .from("mesocycle_exercises")
     .select("exercise_id")
-    .eq("mesocycle_id", activeMesocycle.id)
+    .eq("mesocycle_id", mesocycleId)
     .eq("day_number", day);
 
   if (error) {
@@ -300,49 +319,24 @@ daySelect.onchange = async () => {
 
   const selected = data.map(r => r.exercise_id);
 
-  // marcar los que corresponden
-  exerciseConfig
-    .querySelectorAll("input[type='checkbox']")
-    .forEach(cb => {
-      if (selected.includes(cb.value)) {
-        cb.checked = true;
-      }
-    });
-};
-
-async function openMesocycleConfig(mesocycle) {
-  activeMesocycle = mesocycle;
-  configTitle.textContent = `Configurar: ${mesocycle.name}`;
-  configView.style.display = "block";
-
-  loadDays(mesocycle);
-  await renderExerciseChecklist(mesocycle);
-}
-
-async function loadDayExercises(mesocycleId, day) {
-  const { data } = await supabase
-    .from("mesocycle_exercises")
-    .select("exercise_id")
-    .eq("mesocycle_id", mesocycleId)
-    .eq("day_number", day);
-
-  const selected = data.map(r => r.exercise_id);
-
   [...exerciseSelect.options].forEach(opt => {
     opt.selected = selected.includes(opt.value);
   });
 }
 
 document.getElementById("save-day-btn").onclick = async () => {
+  if (!activeMesocycle || !daySelect.value) {
+    alert("Selecciona mesociclo y día");
+    return;
+  }
+
   const day = parseInt(daySelect.value);
 
-  const selectedExercises = [...exerciseSelect.selectedOptions].map(
-    opt => ({
-      mesocycle_id: activeMesocycle.id,
-      exercise_id: opt.value,
-      day_number: day
-    })
-  );
+  const rows = [...exerciseSelect.selectedOptions].map(opt => ({
+    mesocycle_id: activeMesocycle.id,
+    exercise_id: opt.value,
+    day_number: day
+  }));
 
   await supabase
     .from("mesocycle_exercises")
@@ -352,7 +346,7 @@ document.getElementById("save-day-btn").onclick = async () => {
 
   const { error } = await supabase
     .from("mesocycle_exercises")
-    .insert(selectedExercises);
+    .insert(rows);
 
   if (!error) alert(`Día ${day} guardado ✅`);
 };
