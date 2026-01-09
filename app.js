@@ -193,22 +193,27 @@ async function loadMesocycles() {
       <button class="register-btn">Registrar ejercicios</button>
     `;
 
-    // Botón editar → pestaña Crear
-    li.querySelector(".edit-btn").onclick = () => {
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
-      document.querySelector('.tab-btn[data-tab="crear-tab"]').classList.add("active");
-      document.getElementById("crear-tab").classList.remove("hidden");
-
-      mesocycleNameInput.value = m.name;
-      mesocycleWeeksInput.value = m.weeks;
-      templateSelect.value = m.template_id;
-      dayButtons.forEach(btn => btn.classList.remove("active"));
-      document.querySelector(`.day-btn[data-days="${m.days_per_week}"]`)?.classList.add("active");
-      selectedDays = m.days_per_week;
-
-      editingMesocycleId = m.id;
-    };
+    // Botón editar → lleva a la pestaña Crear y rellena el formulario
+   li.querySelector(".edit-btn").onclick = () => {
+     // 1️⃣ Cambiar a pestaña Crear Mesociclo
+     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+     document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
+     document.querySelector('.tab-btn[data-tab="crear-tab"]').classList.add("active");
+     document.getElementById("crear-tab").classList.remove("hidden");
+   
+     // 2️⃣ Rellenar formulario con datos del mesociclo
+     mesocycleNameInput.value = m.name;
+     mesocycleWeeksInput.value = m.weeks;
+     templateSelect.value = m.template_id;
+   
+     dayButtons.forEach(btn => btn.classList.remove("active"));
+     const btnDias = document.querySelector(`.day-btn[data-days="${m.days_per_week}"]`);
+     if (btnDias) btnDias.classList.add("active");
+     selectedDays = m.days_per_week;
+   
+     // 3️⃣ Guardar el ID del mesociclo para editar en lugar de crear uno nuevo
+     editingMesocycleId = m.id;
+   };
 
     // Botón registrar → pestaña Registro
     li.querySelector(".register-btn").onclick = () => openRegistroEditor(m.id);
