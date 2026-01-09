@@ -275,10 +275,37 @@ async function renderExercisesForDay(editor, mesocycle, day, week, template) {
   select.innerHTML = "";
   list.innerHTML = "";
 
-  let query = supabase.from("exercises").select("id,name,subgroup").order("name");
-  if (template.emphasis !== "Todos") query = query.in("subgroup", template.emphasis.split(","));
-  const { data: exercises } = await query;
+  // Filtrar subgrupos según plantilla
+  let subgroups = [];
+  if (template.emphasis && template.emphasis !== "Todos") {
+    subgroups = template.emphasis.split(",").map(s => s.trim());
+  }
 
+  // Cargar ejercicios desde Supabase
+  let query = supabase.from("exercises").select("id,name,subgroup").order("name");
+  if (subgroups.length) query = query.in("subgroup", subgroups);
+
+  const { data: exercises, error } = await query;
+  if (error) {
+    console.error(error);
+    select.innerHTML = "<option>Error cargando ejercicios</option>";
+    return;
+  }
+
+  if (!exercises || exercises.length === 0) {
+    select.innerHTML = "<option>No hay ejercicios disponibles</option>";
+    return;
+  }
+
+  // Crear opciones en el select
+  exercises.forEach(ex => {
+    const opt = document.createElement("option");
+    opt.value = ex.id;
+    opt.textContent = `${ex.name} (${ex.subgroup})`;
+    select.appendChild(opt);
+  });
+
+  // Cargar ejercicios ya guardados para este día y semana
   const { data: saved } = await supabase
     .from("mesocycle_exercises")
     .select("exercise_id")
@@ -289,6 +316,7 @@ async function renderExercisesForDay(editor, mesocycle, day, week, template) {
   const savedIds = saved.map(r => r.exercise_id);
   [...select.options].forEach(o => o.selected = savedIds.includes(o.value));
 
+  // Mostrar chips de ejercicios guardados
   saved.forEach(r => {
     const ex = exercises.find(e => e.id === r.exercise_id);
     if (ex) {
