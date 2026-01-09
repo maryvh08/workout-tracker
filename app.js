@@ -329,9 +329,12 @@ async function renderDayExercises(mesocycleId, day) {
 }
 
 daySelect.onchange = async () => {
-  if (!activeMesocycle || !daySelect.value) return;
+  if (!daySelect.value || !activeMesocycle) return;
 
-  await renderDayExercises(activeMesocycle.id, daySelect.value);
+  exerciseConfig.style.display = "block";
+
+  await renderExerciseSelect(activeMesocycle);
+  await loadDayExercises(activeMesocycle.id, parseInt(daySelect.value));
 };
 
 async function loadDayExercises(mesocycleId, day) {
