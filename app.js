@@ -164,8 +164,8 @@ async function loadMesocycles() {
     li.innerHTML = `
       <header>
         <h3>${m.name}</h3>
-        <span>${m.weeks} semanas · ${m.days_per_week} días</span>
         <p class="template-name">Plantilla: ${template.name}</p>
+        <span>${m.weeks} semanas · ${m.days_per_week} días</span>
       </header>
       <button class="edit-btn">Editar</button>
       <div class="editor hidden"></div>
