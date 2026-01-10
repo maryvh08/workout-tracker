@@ -1,5 +1,6 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 alert("app.js cargado");
+console.log("supabase:", supabase);
 
 /* ======================
    SUPABASE
