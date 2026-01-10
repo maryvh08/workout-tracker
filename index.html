@@ -89,6 +89,22 @@
 
 <h1>🏋️‍♂️ Workout Tracker</h1>
 
+<!-- MODAL REGISTRO -->
+<div id="exercise-modal" class="hidden">
+  <div class="modal-content">
+    <h3 id="modal-exercise-name"></h3>
+
+    <label>Peso (kg)</label>
+    <input type="number" id="modal-weight" step="0.5">
+
+    <label>Repeticiones</label>
+    <input type="number" id="modal-reps">
+
+    <button id="save-exercise-log">Guardar</button>
+    <button id="close-modal">Cancelar</button>
+  </div>
+</div>
+
 <!-- LOGIN -->
 <div id="login-view">
   <input type="email" id="email" placeholder="Email">
@@ -155,22 +171,6 @@
     <div id="registro-editor"></div>
   </div>
 
-</div>
-
-<!-- MODAL REGISTRO DE EJERCICIO -->
-<div id="exercise-modal" class="hidden">
-  <div class="modal-content">
-    <h3 id="modal-exercise-name"></h3>
-
-    <label>Peso (kg)</label>
-    <input type="number" id="modal-weight" step="0.5">
-
-    <label>Repeticiones</label>
-    <input type="number" id="modal-reps">
-
-    <button id="save-exercise-log">Guardar</button>
-    <button id="close-modal">Cancelar</button>
-  </div>
 </div>
 
 <script type="module" src="app.js"></script>
