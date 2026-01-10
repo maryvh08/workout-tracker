@@ -28,6 +28,13 @@ body {
   padding: var(--spacing);
 }
 
+.hidden {
+  display: none !important;
+}
+
+/* ======================
+   ELEMENTOS BÁSICOS
+====================== */
 button {
   cursor: pointer;
   border: none;
@@ -35,23 +42,16 @@ button {
   padding: 0.5rem 1rem;
   background-color: var(--accent);
   color: #fff;
-  transition: all 0.2s;
+  transition: background-color 0.2s;
 }
 
 button:hover {
   background-color: #5f6fe8;
 }
 
-select {
-  border-radius: var(--radius);
-  padding: 0.5rem;
-  margin-bottom: var(--spacing);
-  background-color: var(--bg-card);
-  color: var(--text-main);
-  border: 1px solid var(--text-muted);
-}
-
+select,
 input {
+  width: 100%;
   border-radius: var(--radius);
   padding: 0.5rem;
   margin-bottom: var(--spacing);
@@ -61,9 +61,10 @@ input {
 }
 
 /* ======================
-   VIEWS
+   VISTAS
 ====================== */
-#login-view, #app-view {
+#login-view,
+#app-view {
   max-width: 1000px;
   margin: 0 auto;
 }
@@ -77,7 +78,6 @@ input {
   background-color: var(--bg-card);
   color: var(--text-main);
   border-radius: var(--radius);
-  transition: all 0.2s;
 }
 
 .tab-btn.active {
@@ -85,29 +85,35 @@ input {
   color: #fff;
 }
 
-.tab-content.hidden {
-  display: none;
+.tab-content {
+  margin-top: var(--spacing);
 }
 
 /* ======================
-   CARDS
+   HISTORIAL / CARDS
 ====================== */
-.history-card, .mesocycle-card {
+.history-card {
   background-color: var(--bg-card);
   padding: var(--spacing);
   margin-bottom: var(--spacing);
   border-radius: var(--radius);
   box-shadow: 0 4px 8px var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.history-card h4, .mesocycle-card h3 {
-  margin-bottom: 0.5rem;
+.history-card h4 {
+  font-size: 1.1rem;
 }
 
 .template-name {
   font-size: 0.9rem;
   color: var(--text-muted);
-  margin-bottom: 0.5rem;
+}
+
+.edit-mesocycle-btn {
+  align-self: flex-start;
 }
 
 /* ======================
@@ -129,8 +135,6 @@ input {
 .day-mini-btn {
   background-color: var(--bg-card);
   color: var(--text-main);
-  padding: 0.4rem 0.8rem;
-  border-radius: var(--radius);
 }
 
 .day-mini-btn.active {
@@ -138,116 +142,25 @@ input {
   color: #fff;
 }
 
-.register-btn {
-  align-self: flex-start;
-  margin-top: var(--spacing);
-}
-
 /* ======================
    CHIPS DE EJERCICIOS
 ====================== */
-.day-exercise-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: var(--spacing);
-}
-
 .exercise-chip {
+  display: inline-block;
   background-color: #2b2b3a;
   padding: 0.4rem 0.8rem;
   border-radius: var(--radius);
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-
-.exercise-chip button {
-  background: transparent;
-  color: var(--text-main);
-  font-weight: bold;
-  padding: 0 0.3rem;
-  font-size: 1rem;
-  line-height: 1;
   cursor: pointer;
+  margin: 0.25rem;
 }
 
-.exercise-chip button:hover {
-  color: #ff6b6b;
-}
-
-/* ======================
-   RESPONSIVE
-====================== */
-@media (max-width: 768px) {
-  .day-buttons {
-    flex-direction: column;
-  }
-  .day-mini-btn {
-    width: 100%;
-  }
-}
-/* ======================
-   TARJETAS DE HISTORIAL
-====================== */
-.history-card {
-  background-color: var(--bg-card);
-  color: var(--text-main);
-  padding: var(--space-md);
-  margin-bottom: var(--space-sm);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  transition: transform 0.2s, box-shadow 0.2s;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.history-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-}
-
-.history-card h4 {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-.history-card p.template-name {
-  margin: 0;
-  font-size: 0.9rem;
-  color: var(--text-muted);
-}
-
-.history-card button.edit-mesocycle-btn {
-  align-self: flex-start;
-  padding: 0.4rem 0.8rem;
-  font-size: 0.9rem;
-  border: none;
-  border-radius: 8px;
-  background-color: var(--accent);
-  color: #fff;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.history-card button.edit-mesocycle-btn:hover {
-  background-color: #5f6fe0; /* versión más oscura del accent */
-}
-
-.history-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.9rem;
-  opacity: 0.9;
-  margin-bottom: 4px;
+.exercise-chip:hover {
+  background-color: #3a3a55;
 }
 
 /* ======================
    MODAL EJERCICIOS (ÚNICO)
 ====================== */
-
 #exercise-modal {
   position: fixed;
   inset: 0;
@@ -272,5 +185,16 @@ input {
   border-radius: 0.75rem;
   width: 280px;
   margin: 10vh auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
+/* ======================
+   RESPONSIVE
+====================== */
+@media (max-width: 768px) {
+  .day-buttons {
+    flex-direction: column;
+  }
+}
