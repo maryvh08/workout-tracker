@@ -66,7 +66,7 @@ function showApp() {
   loginView.style.display = "none";
   appView.style.display = "block";
   setupTabs();
-  setupDayButtons();
+  renderDayButtons();
   loadTemplates();
   loadMesocycles();
 }
@@ -86,22 +86,6 @@ function setupTabs() {
       document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
       btn.classList.add("active");
       document.getElementById(btn.dataset.tab).classList.remove("hidden");
-    };
-  });
-}
-
-/* ======================
-   DÍAS (CREAR MESOCICLO)
-====================== */
-function setupDayButtons() {
-  const buttons = document.querySelectorAll(".day-btn");
-
-  buttons.forEach(btn => {
-    btn.onclick = () => {
-      buttons.forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      selectedDays = Number(btn.dataset.days);
-      console.log("Días seleccionados:", selectedDays);
     };
   });
 }
@@ -133,37 +117,27 @@ async function loadExercisesForSelect(select, template) {
 }
 
 /* ======================
-   CREATE / EDIT MESOCYCLE
-====================== */
-function renderDayButtons() {
-  dayButtonsContainer.innerHTML = "";
-  for (let i = 1; i <= 7; i++) {
-    const btn = document.createElement("button");
-    btn.textContent = i;
-    btn.dataset.days = i;
-    btn.onclick = () => {
-      dayButtonsContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      selectedDays = i;
-    };
-    dayButtonsContainer.appendChild(btn);
-  }
-}
-
-/* ======================
    DÍAS DE ENTRENAMIENTO
 ====================== */
-function renderDayButtons() {
+function renderDayButtons(activeDays = null) {
   dayButtonsContainer.innerHTML = "";
+  selectedDays = activeDays || 0;
+
   for (let i = 1; i <= 7; i++) {
     const btn = document.createElement("button");
     btn.textContent = i;
     btn.dataset.days = i;
+
+    if (i === activeDays) {
+      btn.classList.add("active");
+    }
+
     btn.onclick = () => {
-      dayButtonsContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+      [...dayButtonsContainer.children].forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       selectedDays = i;
     };
+
     dayButtonsContainer.appendChild(btn);
   }
 }
