@@ -76,20 +76,19 @@ async function checkSession() {
 /* ======================
    VIEW
 ====================== */
+function showLogin() {
+  loginView.classList.remove("hidden");
+  appView.classList.add("hidden");
+}
+
 async function showApp() {
-  loginView.style.display = "none";
-  appView.style.display = "block";
+  loginView.classList.add("hidden");
+  appView.classList.remove("hidden");
 
   setupTabs();
   initDaySelector();
-
   await loadTemplates();
   await loadMesocycles();
-}
-
-function showLogin() {
-  loginView.style.display = "block";
-  appView.style.display = "none";
 }
 
 /* ======================
