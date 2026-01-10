@@ -332,6 +332,79 @@ async function renderRegistroEditor(mesocycleId) {
   registroEditor.appendChild(container);
 }
 
+async function openExerciseModal(mesocycleId, exerciseId, day, week, chip) {
+  // Crear contenedor flotante
+  const modal = document.createElement("div");
+  modal.className = "exercise-modal";
+  modal.style.position = "absolute";
+  modal.style.background = "#222";
+  modal.style.color = "#fff";
+  modal.style.padding = "10px";
+  modal.style.borderRadius = "8px";
+  modal.style.boxShadow = "0 2px 8px rgba(0,0,0,0.5)";
+  modal.style.zIndex = 1000;
+
+  // Posicionar cerca del chip
+  const rect = chip.getBoundingClientRect();
+  modal.style.top = `${rect.bottom + window.scrollY + 5}px`;
+  modal.style.left = `${rect.left + window.scrollX}px`;
+
+  // Obtener registros previos
+  const { data: record } = await supabase.from("exercise_records")
+    .select("*")
+    .eq("mesocycle_id", mesocycleId)
+    .eq("exercise_id", exerciseId)
+    .eq("day_number", day)
+    .eq("week_number", week)
+    .single();
+
+  // Inputs
+  const weightInput = document.createElement("input");
+  weightInput.type = "number";
+  weightInput.placeholder = "Peso kg";
+  weightInput.value = record?.weight_kg || "";
+  weightInput.style.marginRight = "5px";
+
+  const repsInput = document.createElement("input");
+  repsInput.type = "number";
+  repsInput.placeholder = "Reps";
+  repsInput.value = record?.reps || "";
+
+  // Botón guardar
+  const saveBtn = document.createElement("button");
+  saveBtn.textContent = "Guardar";
+  saveBtn.onclick = async () => {
+    const weight = parseFloat(weightInput.value);
+    const reps = parseInt(repsInput.value);
+    if (isNaN(weight) || isNaN(reps)) return alert("Ingresa peso y repeticiones válidos");
+
+    if (record) {
+      await supabase.from("exercise_records")
+        .update({ weight_kg: weight, reps })
+        .eq("id", record.id);
+    } else {
+      await supabase.from("exercise_records")
+        .insert({ mesocycle_id: mesocycleId, exercise_id: exerciseId, day_number: day, week_number: week, weight_kg: weight, reps });
+    }
+
+    modal.remove();
+    alert("Registro guardado");
+  };
+
+  // Botón cancelar
+  const cancelBtn = document.createElement("button");
+  cancelBtn.textContent = "Cancelar";
+  cancelBtn.style.marginLeft = "5px";
+  cancelBtn.onclick = () => modal.remove();
+
+  modal.appendChild(weightInput);
+  modal.appendChild(repsInput);
+  modal.appendChild(saveBtn);
+  modal.appendChild(cancelBtn);
+
+  document.body.appendChild(modal);
+}
+
 /* ======================
    RENDER EJERCICIOS
 ====================== */
