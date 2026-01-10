@@ -4,20 +4,84 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Workout Tracker</title>
+
   <style>
-    body { font-family: sans-serif; background: #0b0b0d; color: #eaeaea; margin: 0; padding: 2rem; }
+    body {
+      font-family: sans-serif;
+      background: #0b0b0d;
+      color: #eaeaea;
+      margin: 0;
+      padding: 2rem;
+    }
+
     h1,h2,h3,h4 { margin: 0.5rem 0; }
-    button { cursor: pointer; padding: 0.4rem 0.8rem; margin: 0.2rem; }
+
+    button {
+      cursor: pointer;
+      padding: 0.4rem 0.8rem;
+      margin: 0.2rem;
+    }
+
     .active { background: #7c8cff; color: #fff; }
     .hidden { display: none; }
-    .tab-btn { padding: 0.5rem 1rem; margin-right: 0.5rem; }
+
+    .tab-btn {
+      padding: 0.5rem 1rem;
+      margin-right: 0.5rem;
+    }
+
     .tab-content { margin-top: 1rem; }
-    .history-card { background: #141418; padding: 1rem; margin-bottom: 0.5rem; border-radius: 0.5rem; }
-    #day-buttons-container, .day-buttons { display: flex; flex-wrap: wrap; margin-top: 0.5rem; }
-    .exercise-chip { display: inline-block; background: #333; padding: 0.2rem 0.5rem; margin: 0.2rem; border-radius: 0.3rem; }
-    .exercise-chip button { margin-left: 0.5rem; background: transparent; border: none; color: red; font-weight: bold; cursor: pointer; }
-    select { margin: 0.5rem 0; padding: 0.3rem; width: 100%; }
-    label { display: block; margin-top: 0.5rem; }
+
+    .history-card {
+      background: #141418;
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      border-radius: 0.5rem;
+    }
+
+    .day-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      margin: 0.5rem 0;
+    }
+
+    .exercise-chip {
+      display: inline-block;
+      background: #333;
+      padding: 0.2rem 0.5rem;
+      margin: 0.2rem;
+      border-radius: 0.3rem;
+      cursor: pointer;
+    }
+
+    select, input {
+      margin: 0.5rem 0;
+      padding: 0.3rem;
+      width: 100%;
+    }
+
+    label {
+      display: block;
+      margin-top: 0.5rem;
+    }
+
+    /* MODAL */
+    #exercise-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .modal-content {
+      background: #141418;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      width: 280px;
+    }
   </style>
 </head>
 
@@ -27,8 +91,8 @@
 
 <!-- LOGIN -->
 <div id="login-view">
-  <input type="email" id="email" placeholder="Email"><br>
-  <input type="password" id="password" placeholder="Contraseña"><br>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Contraseña">
   <button id="login-btn">Iniciar sesión</button>
   <button id="signup-btn">Registrarse</button>
   <p id="auth-message" style="color:red;"></p>
@@ -39,16 +103,17 @@
 
   <button id="logout-btn">Cerrar sesión</button>
 
-  <!-- Tabs -->
+  <!-- TABS -->
   <div>
     <button class="tab-btn active" data-tab="crear-tab">Crear Mesociclo</button>
     <button class="tab-btn" data-tab="historial-tab">Historial</button>
     <button class="tab-btn" data-tab="registro-tab">Registro</button>
   </div>
 
-  <!-- Crear Mesociclo -->
-  <div id="day-buttons-container" class="day-buttons"></div>
+  <!-- CREAR MESOCICLO -->
+  <div id="crear-tab" class="tab-content">
     <h2>Crear / Editar Mesociclo</h2>
+
     <label>Nombre del mesociclo</label>
     <input type="text" id="mesocycle-name">
 
@@ -61,7 +126,7 @@
     </select>
 
     <label>Días de entrenamiento a la semana</label>
-    <div class="day-selector">
+    <div class="day-buttons day-selector">
       <button class="day-btn" data-days="1">1</button>
       <button class="day-btn" data-days="2">2</button>
       <button class="day-btn" data-days="3">3</button>
@@ -70,28 +135,29 @@
       <button class="day-btn" data-days="6">6</button>
     </div>
 
-
     <button id="create-mesocycle-btn">Guardar Mesociclo</button>
   </div>
 
-  <!-- Historial -->
+  <!-- HISTORIAL -->
   <div id="historial-tab" class="tab-content hidden">
     <h2>Historial de Mesociclos</h2>
     <ul id="history-list"></ul>
   </div>
 
-  <!-- Registro -->
+  <!-- REGISTRO -->
   <div id="registro-tab" class="tab-content hidden">
     <h2>Registro de Ejercicios</h2>
+
     <select id="registro-select">
       <option value="">Selecciona un mesociclo</option>
     </select>
+
     <div id="registro-editor"></div>
   </div>
 
 </div>
 
-<!-- MODAL REGISTRO -->
+<!-- MODAL REGISTRO DE EJERCICIO -->
 <div id="exercise-modal" class="hidden">
   <div class="modal-content">
     <h3 id="modal-exercise-name"></h3>
