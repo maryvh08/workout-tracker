@@ -295,69 +295,159 @@ async function renderRegistroEditor(mesocycleId) {
   title.textContent = `Mesociclo: ${mesocycle.name}`;
   registroEditor.appendChild(title);
 
+  /* ---------- Semana ---------- */
   const weekSelect = document.createElement("select");
   for (let i = 1; i <= mesocycle.weeks; i++) {
-    weekSelect.innerHTML += `<option value="${i}">Semana ${i}</option>`;
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = `Semana ${i}`;
+    weekSelect.appendChild(opt);
   }
   registroEditor.appendChild(weekSelect);
 
+  /* ---------- Días ---------- */
   const dayLabel = document.createElement("label");
   dayLabel.textContent = "Días de entrenamiento";
   registroEditor.appendChild(dayLabel);
 
   const dayDiv = document.createElement("div");
+  dayDiv.className = "day-buttons";
+
   let selectedDay = null;
 
   for (let i = 1; i <= mesocycle.days_per_week; i++) {
     const btn = document.createElement("button");
     btn.textContent = `Día ${i}`;
-    btn.onclick = () => {
+
+    btn.onclick = async () => {
       [...dayDiv.children].forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       selectedDay = i;
+
+      await renderRegisteredExercises(
+        registroEditor,
+        mesocycleId,
+        selectedDay,
+        Number(weekSelect.value)
+      );
     };
+
     dayDiv.appendChild(btn);
   }
+
   registroEditor.appendChild(dayDiv);
 
+  /* ---------- Selector de ejercicios ---------- */
   const exerciseSelect = document.createElement("select");
   exerciseSelect.multiple = true;
   exerciseSelect.size = 8;
+
   exercises.forEach(ex => {
     const opt = document.createElement("option");
     opt.value = ex.id;
     opt.textContent = ex.name;
     exerciseSelect.appendChild(opt);
   });
+
   registroEditor.appendChild(exerciseSelect);
 
+  /* ---------- Guardar ---------- */
   const saveBtn = document.createElement("button");
   saveBtn.textContent = "Registrar ejercicios";
+
   saveBtn.onclick = async () => {
-    if (!selectedDay) return alert("Selecciona un día");
+    if (!selectedDay) {
+      alert("Selecciona un día");
+      return;
+    }
+
+    const week = Number(weekSelect.value);
 
     await supabase
       .from("mesocycle_exercises")
       .delete()
       .eq("mesocycle_id", mesocycleId)
       .eq("day_number", selectedDay)
-      .eq("week_number", weekSelect.value);
+      .eq("week_number", week);
 
     const rows = [...exerciseSelect.selectedOptions].map(o => ({
       mesocycle_id: mesocycleId,
       exercise_id: o.value,
       day_number: selectedDay,
-      week_number: weekSelect.value
+      week_number: week
     }));
 
     if (rows.length) {
       await supabase.from("mesocycle_exercises").insert(rows);
     }
 
+    await renderRegisteredExercises(
+      registroEditor,
+      mesocycleId,
+      selectedDay,
+      week
+    );
+
     alert("Ejercicios registrados");
   };
 
   registroEditor.appendChild(saveBtn);
+}
+
+async function renderRegisteredExercises(
+  container,
+  mesocycleId,
+  day,
+  week
+) {
+  // eliminar lista previa si existe
+  let list = container.querySelector(".day-exercise-list");
+  if (!list) {
+    list = document.createElement("div");
+    list.className = "day-exercise-list";
+    container.appendChild(list);
+  }
+
+  list.innerHTML = "";
+
+  const { data, error } = await supabase
+    .from("mesocycle_exercises")
+    .select(`
+      exercise_id,
+      exercises ( id, name, subgroup )
+    `)
+    .eq("mesocycle_id", mesocycleId)
+    .eq("day_number", day)
+    .eq("week_number", week);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  if (!data.length) {
+    list.innerHTML = "<p>No hay ejercicios registrados</p>";
+    return;
+  }
+
+  data.forEach(row => {
+    const chip = document.createElement("div");
+    chip.className = "exercise-chip";
+    chip.textContent = `${row.exercises.name} (${row.exercises.subgroup})`;
+
+    // click → abrir modal (historial + registrar peso)
+    chip.onclick = () => {
+      openExerciseModal(
+        mesocycleId,
+        row.exercise_id,
+        day,
+        week,
+        row.exercises.name
+      );
+    };
+
+    list.appendChild(chip);
+  });
 }
 
 /* ======================
