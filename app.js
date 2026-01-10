@@ -68,13 +68,18 @@ async function checkSession() {
 /* ======================
    VIEW
 ====================== */
-function showApp() {
+async function showApp() {
   loginView.style.display = "none";
   appView.style.display = "block";
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+
   setupTabs();
   renderDayButtons();
-  loadTemplates();
-  loadMesocycles();
+
+  await loadTemplates();
+  await loadMesocycles();
 }
 
 function showLogin() {
