@@ -24,6 +24,15 @@ const historyList = document.getElementById("history-list");
 const registroSelect = document.getElementById("registro-select");
 const registroEditor = document.getElementById("registro-editor");
 
+const exerciseModal = document.getElementById("exercise-modal");
+const modalExerciseName = document.getElementById("modal-exercise-name");
+const modalWeight = document.getElementById("modal-weight");
+const modalReps = document.getElementById("modal-reps");
+const saveExerciseLogBtn = document.getElementById("save-exercise-log");
+const closeModalBtn = document.getElementById("close-modal");
+
+let modalContext = null;
+
 /* ======================
    STATE
 ====================== */
