@@ -236,3 +236,13 @@ input {
   background-color: #5f6fe0; /* versión más oscura del accent */
 }
 
+.exercise-modal input {
+  width: 60px;
+  padding: 2px 4px;
+  margin-bottom: 5px;
+}
+.exercise-modal button {
+  padding: 4px 8px;
+  margin-top: 5px;
+  cursor: pointer;
+}
