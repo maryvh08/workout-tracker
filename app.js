@@ -10,7 +10,8 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const loginView = document.getElementById("login-view");
 const appView = document.getElementById("app-view");
 const message = document.getElementById("auth-message");
-
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
 const templateSelect = document.getElementById("template-select");
 const mesocycleNameInput = document.getElementById("mesocycle-name");
 const mesocycleWeeksInput = document.getElementById("mesocycle-weeks");
@@ -88,6 +89,9 @@ function setupTabs() {
   });
 }
 
+/* ======================
+   DÍAS (CREAR MESOCICLO)
+====================== */
 function setupDayButtons() {
   const buttons = document.querySelectorAll(".day-btn");
 
@@ -101,16 +105,29 @@ function setupDayButtons() {
   });
 }
 
-/* ======================
-   DÍAS (CREAR MESOCICLO)
-====================== */
-function setupDayButtons() {
-  document.querySelectorAll(".day-btn").forEach(btn => {
-    btn.onclick = () => {
-      document.querySelectorAll(".day-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      selectedDays = parseInt(btn.dataset.days);
-    };
+async function loadExercisesForSelect(select, template) {
+  select.innerHTML = "";
+
+  let query = supabase
+    .from("exercises")
+    .select("id, name, subgroup")
+    .order("name");
+
+  if (template?.emphasis && template.emphasis !== "Todos") {
+    query = query.in("subgroup", template.emphasis.split(","));
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  data.forEach(ex => {
+    const opt = document.createElement("option");
+    opt.value = ex.id;
+    opt.textContent = `${ex.name} (${ex.subgroup})`;
+    select.appendChild(opt);
   });
 }
 
