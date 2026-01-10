@@ -73,18 +73,23 @@
 
   <!-- ================= REGISTRO ================= -->
   <section id="registro-tab" class="tab-content hidden">
-
+  
     <h2>Registro de Ejercicios</h2>
-
-    <label>Mesociclo</label>
+  
+    <!-- Selector de mesociclo -->
+    <label for="registro-select">Mesociclo</label>
     <select id="registro-select">
       <option value="">Selecciona un mesociclo</option>
     </select>
-
-    <div id="registro-editor"></div>
-
+  
+    <!-- Editor dinámico -->
+    <div id="registro-editor" class="registro-editor">
+      <p class="placeholder">
+        Selecciona un mesociclo para comenzar el registro
+      </p>
+    </div>
+  
   </section>
-
 </section>
 
 <script type="module" src="app.js"></script>
