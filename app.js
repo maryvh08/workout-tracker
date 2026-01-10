@@ -269,3 +269,7 @@ async function renderRegistroEditor(mesocycleId) {
 function openExerciseModal() {
   alert("Modal pendiente");
 }
+
+initAuth();
+checkSession();
+
