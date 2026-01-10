@@ -252,4 +252,3 @@ async function renderRegistroEditor(mesocycleId) {
    INIT
 ====================== */
 checkSession();
-
