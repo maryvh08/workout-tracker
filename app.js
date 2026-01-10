@@ -328,6 +328,47 @@ async function openExerciseModal(
   modal.querySelector("#close-modal").onclick = () => modal.remove();
 }
 
+createBtn.onclick = async () => {
+  const name = mesocycleNameInput.value.trim();
+  const template_id = templateSelect.value;
+  const weeks = parseInt(mesocycleWeeksInput.value);
+
+  if (!name || !template_id || !weeks || !selectedDays) return alert("Completa todos los campos");
+
+  // Obtener ID de usuario correctamente
+  const { data: { session } } = await supabase.auth.getSession();
+  const user_id = session?.user?.id;
+  if (!user_id) return alert("No hay usuario autenticado");
+
+  try {
+    if (editingMesocycleId) {
+      const { error } = await supabase
+        .from("mesocycles")
+        .update({ name, template_id, weeks, days_per_week: selectedDays, user_id })
+        .eq("id", editingMesocycleId);
+      if (error) throw error;
+      editingMesocycleId = null;
+    } else {
+      const { error } = await supabase
+        .from("mesocycles")
+        .insert({ name, template_id, weeks, days_per_week: selectedDays, user_id });
+      if (error) throw error;
+    }
+
+    mesocycleNameInput.value = "";
+    templateSelect.value = "";
+    mesocycleWeeksInput.value = "";
+    selectedDays = 0;
+    renderDayButtons();
+
+    await loadMesocycles();
+    alert("Mesociclo guardado correctamente!");
+  } catch (err) {
+    console.error(err);
+    alert("Error al guardar el mesociclo: " + err.message);
+  }
+};
+
 /* ======================
    REGISTRO
 ====================== */
