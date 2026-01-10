@@ -120,7 +120,8 @@ createBtn.onclick = async () => {
 
   if (!name || !template_id || !weeks || !selectedDays) return alert("Completa todos los campos");
 
-  const { data: session } = await supabase.auth.getSession();
+  // Obtener ID de usuario correctamente
+  const { data: { session } } = await supabase.auth.getSession();
   const user_id = session?.user?.id;
   if (!user_id) return alert("No hay usuario autenticado");
 
