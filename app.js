@@ -32,6 +32,7 @@ const registroEditor = document.getElementById("registro-editor");
 ====================== */
 let selectedDays = 0;
 let editingMesocycleId = null;
+let selectedDaysPerWeek = null;
 
 /* ======================
    AUTH
@@ -103,6 +104,20 @@ function setupTabs() {
     };
   });
 }
+
+document.querySelectorAll(".day-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    // limpiar estado visual
+    document.querySelectorAll(".day-btn")
+      .forEach(b => b.classList.remove("active"));
+
+    // activar botón
+    btn.classList.add("active");
+
+    // guardar valor REAL
+    selectedDaysPerWeek = Number(btn.dataset.days);
+  });
+});
 
 /* ======================
    DAY BUTTONS (CREAR)
