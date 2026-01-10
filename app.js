@@ -450,6 +450,10 @@ async function renderRegisteredExercises(container, mesocycleId, day, week) {
   });
 }
 
+function openExerciseModal() {
+  alert("Modal de ejercicio pendiente de implementar");
+}
+
 /* ======================
    INIT
 ====================== */
