@@ -364,29 +364,34 @@ async function renderExercisesForRegistro(container, mesocycleId, day, week, tem
   [...select.options].forEach(o => o.selected = savedIds.includes(o.value));
 
   saved.forEach(r => {
-    const ex = exercises.find(e => e.id === r.exercise_id);
-    if (ex) {
-      const chip = document.createElement("div");
-      chip.className = "exercise-chip";
-      chip.textContent = `${ex.name} (${ex.subgroup})`;
-
-      const delBtn = document.createElement("button");
-      delBtn.textContent = "×";
-      delBtn.onclick = async () => {
-        await supabase.from("mesocycle_exercises")
-          .delete()
-          .eq("mesocycle_id", mesocycleId)
-          .eq("day_number", day)
-          .eq("week_number", week)
-          .eq("exercise_id", ex.id);
-        chip.remove();
-        const opt = [...select.options].find(o => o.value == ex.id);
-        if (opt) opt.selected = false;
-      };
-      chip.appendChild(delBtn);
-      list.appendChild(chip);
-    }
-  });
+     const ex = exercises.find(e => e.id === r.exercise_id);
+     if (ex) {
+       const chip = document.createElement("div");
+       chip.className = "exercise-chip";
+       chip.textContent = `${ex.name} (${ex.subgroup})`;
+       
+       chip.onclick = async (e) => {
+         e.stopPropagation(); // evitar conflictos con el click general
+         openExerciseModal(mesocycleId, r.exercise_id, day, week, chip);
+       };
+   
+       const delBtn = document.createElement("button");
+       delBtn.textContent = "×";
+       delBtn.onclick = async () => {
+         await supabase.from("mesocycle_exercises")
+           .delete()
+           .eq("mesocycle_id", mesocycleId)
+           .eq("day_number", day)
+           .eq("week_number", week)
+           .eq("exercise_id", ex.id);
+         chip.remove();
+         const opt = [...select.options].find(o => o.value == ex.id);
+         if (opt) opt.selected = false;
+       };
+       chip.appendChild(delBtn);
+       list.appendChild(chip);
+     }
+   });
 }
 
 /* ======================
