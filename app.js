@@ -187,11 +187,7 @@ async function loadMesocycles() {
       mesocycleNameInput.value = m.name;
       mesocycleWeeksInput.value = m.weeks;
       templateSelect.value = m.template_id;
-      selectedDays = m.days_per_week;
-
-      document.querySelectorAll(".day-btn").forEach(b => {
-        b.classList.toggle("active", parseInt(b.dataset.days) === selectedDays);
-      });
+      renderDayButtons(m.days_per_week);
 
       document.querySelector('[data-tab="crear-tab"]').click();
     };
