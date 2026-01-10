@@ -231,22 +231,21 @@ async function renderRegisteredExercises(mesocycleId, week, day) {
 // =======================
 // MODAL
 // =======================
-function openExerciseModal(context) {
-  if (!exerciseModal.classList.contains("hidden")) return;
-
-  modalContext = context;
-  modalExerciseName.textContent = context.exerciseName;
-  modalWeight.value = "";
-  modalReps.value = "";
-
-  exerciseModal.classList.remove("hidden");
-}
-
 function setupExerciseModal() {
+
+  // click en el fondo → cerrar
+  exerciseModal.onclick = () => {
+    closeExerciseModal();
+  };
+
+  // bloquear bubbling dentro del modal
+  document.querySelector(".modal-content").onclick = (e) => {
+    e.stopPropagation();
+  };
+
   closeModalBtn.onclick = (e) => {
     e.stopPropagation();
-    exerciseModal.classList.add("hidden");
-    modalContext = null;
+    closeExerciseModal();
   };
 
   saveModalBtn.onclick = async (e) => {
@@ -283,8 +282,23 @@ function setupExerciseModal() {
       return;
     }
 
-    exerciseModal.classList.add("hidden");
-    modalContext = null;
+    closeExerciseModal();
     alert("Registro guardado 💪");
   };
+}
+
+function openExerciseModal(context) {
+  if (!exerciseModal.classList.contains("hidden")) return;
+
+  modalContext = context;
+  modalExerciseName.textContent = context.exerciseName;
+  modalWeight.value = "";
+  modalReps.value = "";
+
+  exerciseModal.classList.remove("hidden");
+}
+
+function closeExerciseModal() {
+  exerciseModal.classList.add("hidden");
+  modalContext = null;
 }
