@@ -259,7 +259,47 @@ async function openRegistro(id) {
    REGISTRO EDITOR
 ====================== */
 async function renderRegistroEditor(mesocycleId) {
-  registroEditor.innerHTML = "<p>Editor cargado</p>";
+  const { data: mesocycle, error } = await supabase
+    .from("mesocycles")
+    .select("id, name, days_per_week")
+    .eq("id", mesocycleId)
+    .single();
+
+  if (error) {
+    console.error(error);
+    registroEditor.innerHTML = "<p>Error cargando mesociclo</p>";
+    return;
+  }
+
+  let daysHtml = "";
+
+  for (let i = 1; i <= mesocycle.days_per_week; i++) {
+    daysHtml += `<button class="registro-day-btn" data-day="${i}">Día ${i}</button>`;
+  }
+
+  registroEditor.innerHTML = `
+    <h3>${mesocycle.name}</h3>
+
+    <label>Día de entrenamiento</label>
+    <div id="registro-days" class="day-buttons">
+      ${daysHtml}
+    </div>
+
+    <div id="registro-exercises">
+      <p>Selecciona un día para ver los ejercicios</p>
+    </div>
+  `;
+
+  document.querySelectorAll(".registro-day-btn").forEach(btn => {
+    btn.onclick = () => {
+      document
+        .querySelectorAll(".registro-day-btn")
+        .forEach(b => b.classList.remove("active"));
+
+      btn.classList.add("active");
+      loadExercisesForDay(mesocycleId, btn.dataset.day);
+    };
+  });
 }
 
 /* ======================
