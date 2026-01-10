@@ -332,77 +332,62 @@ async function renderRegistroEditor(mesocycleId) {
   registroEditor.appendChild(container);
 }
 
-async function openExerciseModal(mesocycleId, exerciseId, day, week, chip) {
-  // Crear contenedor flotante
-  const modal = document.createElement("div");
+function openExerciseModal(mesocycleId, exerciseId, day, week, exerciseName, weight = "", reps = "") {
+  // Crear modal básico
+  let modal = document.createElement("div");
   modal.className = "exercise-modal";
-  modal.style.position = "absolute";
+  modal.style.position = "fixed";
+  modal.style.top = "50%";
+  modal.style.left = "50%";
+  modal.style.transform = "translate(-50%, -50%)";
   modal.style.background = "#222";
   modal.style.color = "#fff";
-  modal.style.padding = "10px";
-  modal.style.borderRadius = "8px";
-  modal.style.boxShadow = "0 2px 8px rgba(0,0,0,0.5)";
-  modal.style.zIndex = 1000;
+  modal.style.padding = "20px";
+  modal.style.borderRadius = "10px";
+  modal.style.zIndex = "1000";
+  modal.style.boxShadow = "0 0 10px rgba(0,0,0,0.5)";
 
-  // Posicionar cerca del chip
-  const rect = chip.getBoundingClientRect();
-  modal.style.top = `${rect.bottom + window.scrollY + 5}px`;
-  modal.style.left = `${rect.left + window.scrollX}px`;
-
-  // Obtener registros previos
-  const { data: record } = await supabase.from("exercise_records")
-    .select("*")
-    .eq("mesocycle_id", mesocycleId)
-    .eq("exercise_id", exerciseId)
-    .eq("day_number", day)
-    .eq("week_number", week)
-    .single();
-
-  // Inputs
-  const weightInput = document.createElement("input");
-  weightInput.type = "number";
-  weightInput.placeholder = "Peso kg";
-  weightInput.value = record?.weight_kg || "";
-  weightInput.style.marginRight = "5px";
-
-  const repsInput = document.createElement("input");
-  repsInput.type = "number";
-  repsInput.placeholder = "Reps";
-  repsInput.value = record?.reps || "";
-
-  // Botón guardar
-  const saveBtn = document.createElement("button");
-  saveBtn.textContent = "Guardar";
-  saveBtn.onclick = async () => {
-    const weight = parseFloat(weightInput.value);
-    const reps = parseInt(repsInput.value);
-    if (isNaN(weight) || isNaN(reps)) return alert("Ingresa peso y repeticiones válidos");
-
-    if (record) {
-      await supabase.from("exercise_records")
-        .update({ weight_kg: weight, reps })
-        .eq("id", record.id);
-    } else {
-      await supabase.from("exercise_records")
-        .insert({ mesocycle_id: mesocycleId, exercise_id: exerciseId, day_number: day, week_number: week, weight_kg: weight, reps });
-    }
-
-    modal.remove();
-    alert("Registro guardado");
-  };
-
-  // Botón cancelar
-  const cancelBtn = document.createElement("button");
-  cancelBtn.textContent = "Cancelar";
-  cancelBtn.style.marginLeft = "5px";
-  cancelBtn.onclick = () => modal.remove();
-
-  modal.appendChild(weightInput);
-  modal.appendChild(repsInput);
-  modal.appendChild(saveBtn);
-  modal.appendChild(cancelBtn);
+  modal.innerHTML = `
+    <h4>${exerciseName}</h4>
+    <label>Peso (kg)</label>
+    <input type="number" step="0.1" value="${weight}" id="modal-weight" />
+    <label>Repeticiones</label>
+    <input type="number" value="${reps}" id="modal-reps" />
+    <div style="margin-top:10px; display:flex; gap:10px; justify-content:flex-end;">
+      <button id="modal-save-btn">Guardar</button>
+      <button id="modal-cancel-btn">Cancelar</button>
+    </div>
+  `;
 
   document.body.appendChild(modal);
+
+  // Guardar cambios
+  modal.querySelector("#modal-save-btn").onclick = async () => {
+    const newWeight = parseFloat(modal.querySelector("#modal-weight").value);
+    const newReps = parseInt(modal.querySelector("#modal-reps").value);
+
+    if (!newWeight || !newReps) return alert("Completa peso y repeticiones");
+
+    // Guardar en Supabase
+    await supabase.from("exercise_records")
+      .upsert({
+        mesocycle_id: mesocycleId,
+        exercise_id: exerciseId,
+        day_number: day,
+        week_number: week,
+        weight_kg: newWeight,
+        reps: newReps
+      }, { onConflict: ["mesocycle_id", "exercise_id", "day_number", "week_number"] });
+
+    modal.remove();
+
+    // Re-renderizar ejercicios
+    const template = await getTemplateById((await supabase.from("mesocycles").select("template_id").eq("id", mesocycleId).single()).data.template_id);
+    await renderExercisesForRegistro(document.querySelector(".registro-container"), mesocycleId, day, week, template);
+  };
+
+  // Cancelar
+  modal.querySelector("#modal-cancel-btn").onclick = () => modal.remove();
 }
 
 /* ======================
@@ -427,44 +412,33 @@ async function renderExercisesForRegistro(container, mesocycleId, day, week, tem
     select.appendChild(opt);
   });
 
-  const { data: saved } = await supabase.from("mesocycle_exercises")
-    .select("exercise_id")
+  // Cargar ejercicios guardados
+  const { data: saved } = await supabase
+    .from("exercise_records")
+    .select("*")
     .eq("mesocycle_id", mesocycleId)
     .eq("day_number", day)
     .eq("week_number", week);
 
-  const savedIds = saved.map(r => r.exercise_id);
-  [...select.options].forEach(o => o.selected = savedIds.includes(o.value));
+  // Map de exercise_id → record
+  const recordMap = {};
+  saved.forEach(r => recordMap[r.exercise_id] = r);
 
   saved.forEach(r => {
-     const ex = exercises.find(e => e.id === r.exercise_id);
-     if (ex) {
-       const chip = document.createElement("div");
-       chip.className = "exercise-chip";
-       chip.textContent = `${ex.name} (${ex.subgroup})`;
-       
-       chip.onclick = async (e) => {
-         e.stopPropagation(); // evitar conflictos con el click general
-         openExerciseModal(mesocycleId, r.exercise_id, day, week, chip);
-       };
-   
-       const delBtn = document.createElement("button");
-       delBtn.textContent = "×";
-       delBtn.onclick = async () => {
-         await supabase.from("mesocycle_exercises")
-           .delete()
-           .eq("mesocycle_id", mesocycleId)
-           .eq("day_number", day)
-           .eq("week_number", week)
-           .eq("exercise_id", ex.id);
-         chip.remove();
-         const opt = [...select.options].find(o => o.value == ex.id);
-         if (opt) opt.selected = false;
-       };
-       chip.appendChild(delBtn);
-       list.appendChild(chip);
-     }
-   });
+    const ex = exercises.find(e => e.id === r.exercise_id);
+    if (ex) {
+      const chip = document.createElement("div");
+      chip.className = "exercise-chip";
+      chip.textContent = `${ex.name} (${ex.subgroup}) - ${r.weight_kg ?? "-"} kg x ${r.reps ?? "-"}`;
+
+      // Click para editar peso/reps
+      chip.onclick = async () => {
+        openExerciseModal(mesocycleId, r.exercise_id, day, week, ex.name, r.weight_kg, r.reps);
+      };
+
+      list.appendChild(chip);
+    }
+  });
 }
 
 /* ======================
