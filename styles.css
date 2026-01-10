@@ -268,3 +268,18 @@ input {
   margin-bottom: 4px;
 }
 
+#exercise-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: #141418;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  width: 280px;
+}
